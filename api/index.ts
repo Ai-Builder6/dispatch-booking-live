@@ -1,3 +1,4 @@
+import { publicStore } from "../src/services/publicStore";
 import express, { Request, Response } from "express";
 import { 
   verifyJobberConnection, 
@@ -21,6 +22,14 @@ import { CANONICAL_JOBBER_STAFF } from "../src/services/staffRosterService";
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+// Never claim an ephemeral serverless write is durable.
+app.use((req, res, next) => {
+  if (process.env.VERCEL && !["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    res.status(503).json({ success: false, error: "Durable storage and authenticated writes must be configured before launch." });
+    return;
+  }
+  next();
+});
 
 // Helper to resolve app base URL
 function getBaseUrl(req: Request): string {
@@ -251,7 +260,7 @@ const REAL_QUO_LINES = [
 ];
 
 app.get("/api/quo/config", (_req: Request, res: Response) => {
-  const apiKey = process.env.QUO_API_KEY || "b0eaf35a497d67c4648102b5446d1b0390a69c5db6c585372e2da5e821f21897";
+  const apiKey = process.env.QUO_API_KEY || "";
   res.json({
     isConnected: Boolean(apiKey),
     phoneNumbers: REAL_QUO_LINES,
@@ -283,14 +292,14 @@ app.get("/api/store", (_req: Request, res: Response) => {
       quotes: generateJobberQuotes(),
       invoices: generateJobberInvoices(),
       quoConfig: {
-        isConnected: true,
-        apiKey: process.env.QUO_API_KEY || "b0eaf35a497d67c4648102b5446d1b0390a69c5db6c585372e2da5e821f21897",
+        isConnected: Boolean(process.env.QUO_API_KEY),
+        apiKey: process.env.QUO_API_KEY || "",
         phoneNumbers: REAL_QUO_LINES,
       },
     };
     saveStore(store);
   }
-  res.json(store);
+  res.json(publicStore(store));
 });
 
 app.post("/api/store/save", (req: Request, res: Response) => {
