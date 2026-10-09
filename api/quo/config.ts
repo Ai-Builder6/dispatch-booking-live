@@ -9,7 +9,7 @@ const REAL_QUO_LINES = [
 ];
 
 export default function handler(_req: VercelRequest, res: VercelResponse) {
-  const apiKey = process.env.QUO_API_KEY || "b0eaf35a497d67c4648102b5446d1b0390a69c5db6c585372e2da5e821f21897";
+  const apiKey = process.env.QUO_API_KEY || "";
   const mapsApiKey = 
     process.env.VITE_GOOGLE_MAPS_API_KEY || 
     process.env.VITEGOOGLE_MAPS_API_KEY || 
@@ -18,7 +18,7 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
     "";
 
   res.status(200).json({
-    isConnected: true,
+    isConnected: Boolean(apiKey),
     phoneNumbers: REAL_QUO_LINES,
     hasApiKey: Boolean(apiKey),
     mapsApiKey,

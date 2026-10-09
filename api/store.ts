@@ -17,7 +17,7 @@ const REAL_QUO_LINES = [
 
 export default function handler(req: any, res: any) {
   if (req.method === "POST") {
-    return res.status(200).json({ success: true, lastSavedAt: new Date().toISOString() });
+    return res.status(503).json({ success: false, error: "Durable storage is not configured. Changes were not saved." });
   }
 
   const token = (process.env.JOBBER_ACCESS_TOKEN || process.env.JOBBER_BEARER_TOKEN || "").trim().replace(/^Bearer\s+/i, "");
@@ -36,14 +36,11 @@ export default function handler(req: any, res: any) {
       isConnected: Boolean(token && token.length > 20),
       accountName: "Tidyups Cleaning Service Inc (Jobber)",
       clientId: process.env.JOBBER_CLIENT_ID || "27966135-e33e-4c2e-8dc3-ad7ba06dabb8",
-      clientSecret: process.env.JOBBER_CLIENT_SECRET || "",
-      accessToken: token,
-      refreshToken: process.env.JOBBER_REFRESH_TOKEN || "",
       lastSyncedAt: new Date().toISOString(),
     },
     quoConfig: {
-      isConnected: true,
-      apiKey: process.env.QUO_API_KEY || "b0eaf35a497d67c4648102b5446d1b0390a69c5db6c585372e2da5e821f21897",
+      isConnected: Boolean(process.env.QUO_API_KEY),
+      hasApiKey: Boolean(process.env.QUO_API_KEY),
       phoneNumbers: REAL_QUO_LINES,
     },
   });

@@ -1215,7 +1215,7 @@
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMjc=",
       "visitNumber": "VISIT-89120",
-      "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "title": "gail - Standard Home Cleaning \u2014 Wednesday, September 23, 2026 at 9:00 AM",
       "clientName": "gail",
       "clientPhone": "7804350960",
       "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
@@ -1264,7 +1264,7 @@
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzMzgxNTAyNjE=",
       "visitNumber": "VISIT-89120",
-      "title": "derek - Move In Or A Move Out Clean — Thursday, October 8, 2026 at 9:00 AM",
+      "title": "derek - Move In Or A Move Out Clean \u2014 Thursday, October 8, 2026 at 9:00 AM",
       "clientName": "derek",
       "clientPhone": "(780) 238-2803",
       "serviceAddress": "16948 116 Street Northwest, Edmonton, AB, Canada, Edmonton, AB",
@@ -1427,7 +1427,7 @@
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMjg=",
       "visitNumber": "VISIT-89120",
-      "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "title": "gail - Standard Home Cleaning \u2014 Wednesday, September 23, 2026 at 9:00 AM",
       "clientName": "gail",
       "clientPhone": "7804350960",
       "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
@@ -1557,7 +1557,7 @@
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMjk=",
       "visitNumber": "VISIT-89120",
-      "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "title": "gail - Standard Home Cleaning \u2014 Wednesday, September 23, 2026 at 9:00 AM",
       "clientName": "gail",
       "clientPhone": "7804350960",
       "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
@@ -1805,7 +1805,7 @@
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMzA=",
       "visitNumber": "VISIT-89120",
-      "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "title": "gail - Standard Home Cleaning \u2014 Wednesday, September 23, 2026 at 9:00 AM",
       "clientName": "gail",
       "clientPhone": "7804350960",
       "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
@@ -2231,7 +2231,7 @@
       "id": "Z2lkOi8vSm9iYmVyL1F1b3RlLzY1NTY4MjQy",
       "quoteNumber": "QT-4227",
       "clientName": "New Quote",
-      "clientPhone": "(780) 708-1486",
+      "clientPhone": "(780)\u00a0708-1486",
       "service": "Residential Deep & Standard Cleaning",
       "quoteStatus": "APPROVED",
       "total": 376.88,
@@ -3454,7 +3454,7 @@
   ],
   "quoConfig": {
     "isConnected": true,
-    "apiKey": "b0eaf35a497d67c4648102b5446d1b0390a69c5db6c585372e2da5e821f21897",
+    "apiKey": "",
     "phoneNumbers": [
       {
         "id": "PNahmHFAAr",
@@ -3498,8 +3498,8 @@
     "accountName": "Tidyups Cleaning Service Inc",
     "clientId": "27966135-e33e-4c2e-8dc3-ad7ba06dabb8",
     "clientSecret": "",
-    "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOjE1ODAxNzYsImlzcyI6Imh0dHBzOi8vYXBpLmdldGpvYmJlci5jb20iLCJjbGllbnRfaWQiOiIyNzk2NjEzNS1lMzNlLTRjMmUtOGRjMy1hZDdiYTA2ZGFiYjgiLCJzY29wZSI6InJlYWRfY2xpZW50cyB3cml0ZV9jbGllbnRzIHJlYWRfcmVxdWVzdHMgd3JpdGVfcmVxdWVzdHMgcmVhZF9xdW90ZXMgd3JpdGVfcXVvdGVzIHJlYWRfam9icyB3cml0ZV9qb2JzIHJlYWRfc2NoZWR1bGVkX2l0ZW1zIHdyaXRlX3NjaGVkdWxlZF9pdGVtcyByZWFkX2ludm9pY2VzIHdyaXRlX2ludm9pY2VzIHJlYWRfam9iYmVyX3BheW1lbnRzIHJlYWRfdXNlcnMgd3JpdGVfdXNlcnMgd3JpdGVfdGF4X3JhdGVzIHJlYWRfZXhwZW5zZXMgd3JpdGVfZXhwZW5zZXMgcmVhZF9jdXN0b21fZmllbGRfY29uZmlndXJhdGlvbnMgd3JpdGVfY3VzdG9tX2ZpZWxkX2NvbmZpZ3VyYXRpb25zIHJlYWRfdGltZV9zaGVldHMgcmVhZF9lcXVpcG1lbnQgd3JpdGVfZXF1aXBtZW50IHJlYWRfbWFya2V0aW5nIHdyaXRlX21hcmtldGluZyIsImFwcF9pZCI6IjI3OTY2MTM1LWUzM2UtNGMyZS04ZGMzLWFkN2JhMDZkYWJiOCIsInVzZXJfaWQiOjE1ODAxNzYsImFjY291bnRfaWQiOjcxODU3NiwiYXVkIjpbImh0dHBzOi8vZ2V0am9iYmVyLmNvbS9ncmFwaHFsIl0sImV4cCI6MTc5MTI1ODU0OH0.fQStRFt3wRbrJM81jTCwaHm4ZXtm-Z0ngRdvB7U4dnY",
-    "refreshToken": "7c21c92cb784dce8072d6431af6a8b7a",
+    "accessToken": "",
+    "refreshToken": "",
     "lastSyncedAt": "2026-10-06T02:54:40.767Z"
   },
   "chatMessages": [
@@ -3552,7 +3552,7 @@
   "staffRoster": [
     {
       "id": "staff-1",
-      "name": "Boss iPad Pro 《iPhone》",
+      "name": "Boss iPad Pro \u300aiPhone\u300b",
       "email": "cleaningserviceyeg@gmail.com",
       "phone": "(780) 718-5092",
       "role": "Dispatcher",
@@ -3905,7 +3905,7 @@
       "jobberId": "jobber-cli-mimi-2026",
       "totalJobs": 3,
       "latestServiceDate": "2026-10-02",
-      "notes": "Mimi - 3bed 2.5bath Initial Basic Cleaning · 2 hr. Client confirmed via Jobber.",
+      "notes": "Mimi - 3bed 2.5bath Initial Basic Cleaning \u00b7 2 hr. Client confirmed via Jobber.",
       "source": "Jobber",
       "createdAt": "2026-09-25T10:00:00Z",
       "updatedAt": "2026-10-02T10:00:00Z"

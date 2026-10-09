@@ -19,23 +19,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     "2bd06c0db10a0a3ccd4c8603";
 
   if (req.method === "POST") {
-    const { accessToken, accountName } = (req.body || {}) as any;
-    const effectiveToken = accessToken ? String(accessToken).trim().replace(/^Bearer\s+/i, "") : token;
-    return res.status(200).json({
-      success: true,
-      message: "Jobber configuration updated",
-      config: {
-        isConnected: Boolean(effectiveToken && effectiveToken.length > 20),
-        accountName: accountName || "Tidyups Cleaning Service Inc (Jobber)",
-        clientId,
-        hasSecret,
-        accessToken: effectiveToken ? `${effectiveToken.slice(0, 8)}...` : "",
-        lastSyncedAt: new Date().toISOString(),
-        redirectUri: "https://app.tidyupscleaning.com/api/jobber/oauth/callback",
-      },
-      mapsApiKey,
-      mapId,
-    });
+    return res.status(503).json({ success: false, error: "Durable credential storage is not configured. Credentials were not saved." });
   }
 
   return res.status(200).json({
