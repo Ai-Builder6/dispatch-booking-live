@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/jobber/oauth/callback/",
+      "destination": "/api/jobber/oauth/callback"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

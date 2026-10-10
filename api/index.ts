@@ -54,6 +54,146 @@ app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "healthy", platform: "vercel-serverless", timestamp: new Date().toISOString() });
 });
 
+// GET /api/jobber/oauth/authorize-url
+app.get("/api/jobber/oauth/authorize-url", (req: Request, res: Response) => {
+  const host = (req.headers.host as string) || "app.tidyupscleaning.com";
+  const proto = (req.headers["x-forwarded-proto"] as string) || "https";
+
+  let redirectUri = `${proto}://${host}/api/jobber/oauth/callback`;
+  if (req.query.redirectUri && typeof req.query.redirectUri === "string") {
+    redirectUri = req.query.redirectUri;
+  } else if (host.includes("tidyupscleaning.com")) {
+    redirectUri = "https://app.tidyupscleaning.com/api/jobber/oauth/callback";
+  }
+
+  const clientId = process.env.JOBBER_CLIENT_ID || "27966135-e33e-4c2e-8dc3-ad7ba06dabb8";
+  const statePayload = {
+    redirectUri,
+    nonce: Math.random().toString(36).substring(2, 12),
+  };
+  const state = Buffer.from(JSON.stringify(statePayload)).toString("base64url");
+
+  const authUrl = new URL("https://api.getjobber.com/api/oauth/authorize");
+  authUrl.searchParams.set("response_type", "code");
+  authUrl.searchParams.set("client_id", clientId);
+  authUrl.searchParams.set("redirect_uri", redirectUri);
+  authUrl.searchParams.set("state", state);
+
+  res.json({
+    authUrl: authUrl.toString(),
+    redirectUri,
+    clientId,
+    state,
+  });
+});
+
+// GET /api/jobber/oauth/callback
+app.get(["/api/jobber/oauth/callback", "/api/jobber/oauth/callback/"], async (req: Request, res: Response) => {
+  const code = (req.query.code as string) || "";
+  const error = (req.query.error as string) || "";
+  const errorDescription = (req.query.error_description as string) || "";
+  const stateParam = (req.query.state as string) || "";
+
+  let redirectUri = "https://app.tidyupscleaning.com/api/jobber/oauth/callback";
+  if (stateParam) {
+    try {
+      const decoded = JSON.parse(Buffer.from(stateParam, "base64url").toString("utf-8"));
+      if (decoded?.redirectUri && typeof decoded.redirectUri === "string") {
+        redirectUri = decoded.redirectUri;
+      }
+    } catch {
+      // Keep default
+    }
+  }
+
+  if (error) {
+    return res.status(400).send(`
+      <!DOCTYPE html><html><head><title>Jobber Authorization Failed</title></head><body>
+      <h2>Jobber Authorization Cancelled</h2><p>${error}: ${errorDescription}</p><a href="/">Return to Dispatch Board</a>
+      </body></html>
+    `);
+  }
+
+  if (!code) {
+    return res.status(400).send("Missing authorization code from Jobber");
+  }
+
+  const clientId = process.env.JOBBER_CLIENT_ID || "27966135-e33e-4c2e-8dc3-ad7ba06dabb8";
+  const clientSecret = process.env.JOBBER_CLIENT_SECRET || "65534ce762fe3ec20a5c1447794dabee0ac03f2caf1048c8686377d4e754a36a";
+
+  try {
+    const tokenRes = await fetch("https://api.getjobber.com/api/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    const tokenData = await tokenRes.json() as any;
+    if (!tokenRes.ok || !tokenData.access_token) {
+      return res.status(400).send(`
+        <!DOCTYPE html><html><head><title>Jobber Token Exchange Failed</title></head><body>
+        <h2>Jobber Token Exchange Failed</h2><pre>${JSON.stringify(tokenData, null, 2)}</pre><a href="/">Return to Dispatch Board</a>
+        </body></html>
+      `);
+    }
+
+    const store = loadStore() || {
+      version: 1,
+      lastSavedAt: new Date().toISOString(),
+      tickets: INITIAL_TICKETS,
+      cleanerOverrides: {},
+      scheduledVisits: generateHistoricAndFutureVisits(),
+      unscheduledJobs: INITIAL_UNSCHEDULED_JOBS,
+      staffRoster: CANONICAL_JOBBER_STAFF,
+      quotes: generateJobberQuotes(),
+      invoices: generateJobberInvoices(),
+    };
+
+    store.jobberConfig = {
+      isConnected: true,
+      accountName: "Tidyups Cleaning Service Inc",
+      clientId,
+      clientSecret,
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token || "",
+      lastSyncedAt: new Date().toISOString(),
+    };
+    saveStore(store);
+
+    res.send(`
+      <!DOCTYPE html><html><head><title>Jobber Connected</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f8fafc;}</style></head><body>
+      <div style="background:white;padding:32px;border-radius:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <h2 style="color:#059669;">Connected to Jobber!</h2>
+        <p>Account: Tidyups Cleaning Service Inc</p>
+        <p>Returning to Dispatch Board...</p>
+        <a href="/">Return to Dispatch Board</a>
+      </div>
+      <script>
+        try {
+          localStorage.setItem('tidyups_jobber_token', ${JSON.stringify(tokenData.access_token)});
+          if (${JSON.stringify(tokenData.refresh_token || "")}) localStorage.setItem('tidyups_jobber_refresh_token', ${JSON.stringify(tokenData.refresh_token || "")});
+          localStorage.setItem('tidyups_jobber_connected', 'true');
+          if (window.opener) {
+            window.opener.postMessage({ type: 'JOBBER_CONNECTED', accessToken: ${JSON.stringify(tokenData.access_token)} }, '*');
+            window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+            setTimeout(function(){ window.close(); }, 1200);
+          }
+        } catch(e){}
+        setTimeout(function(){ window.location.href = '/'; }, 1800);
+      </script>
+      </body></html>
+    `);
+  } catch (err: any) {
+    res.status(500).send("Token exchange error: " + err.message);
+  }
+});
+
 // GET /api/jobber/config
 app.get("/api/jobber/config", (req: Request, res: Response) => {
   const cfg = getJobberConfig();

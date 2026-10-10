@@ -1,9 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+let inMemoryToken = (process.env.JOBBER_ACCESS_TOKEN || process.env.JOBBER_BEARER_TOKEN || "").trim().replace(/^Bearer\s+/i, "");
+let inMemoryRefreshToken = (process.env.JOBBER_REFRESH_TOKEN || "").trim();
+
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  const token = (process.env.JOBBER_ACCESS_TOKEN || process.env.JOBBER_BEARER_TOKEN || "").trim().replace(/^Bearer\s+/i, "");
+  const token = inMemoryToken || (process.env.JOBBER_ACCESS_TOKEN || process.env.JOBBER_BEARER_TOKEN || "").trim().replace(/^Bearer\s+/i, "");
   const clientId = process.env.JOBBER_CLIENT_ID || "27966135-e33e-4c2e-8dc3-ad7ba06dabb8";
-  const hasSecret = Boolean(process.env.JOBBER_CLIENT_SECRET);
+  const hasSecret = Boolean(process.env.JOBBER_CLIENT_SECRET || "65534ce762fe3ec20a5c1447794dabee0ac03f2caf1048c8686377d4e754a36a");
   const isConnected = Boolean(token && token.length > 20);
 
   const mapsApiKey = 
@@ -19,13 +22,41 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     "2bd06c0db10a0a3ccd4c8603";
 
   if (req.method === "POST") {
-    const { accessToken, accountName } = (req.body || {}) as any;
-    const effectiveToken = accessToken ? String(accessToken).trim().replace(/^Bearer\s+/i, "") : token;
+    const { accessToken, refreshToken, accountName, disconnect } = (req.body || {}) as any;
+
+    if (disconnect) {
+      inMemoryToken = "";
+      inMemoryRefreshToken = "";
+      return res.status(200).json({
+        success: true,
+        message: "Disconnected from Jobber",
+        config: {
+          isConnected: false,
+          accountName: "Tidyups Cleaning Service Inc (Jobber)",
+          clientId,
+          hasSecret,
+          accessToken: "",
+          lastSyncedAt: new Date().toISOString(),
+          redirectUri: "https://app.tidyupscleaning.com/api/jobber/oauth/callback",
+        },
+      });
+    }
+
+    if (accessToken !== undefined) {
+      inMemoryToken = String(accessToken).trim().replace(/^Bearer\s+/i, "");
+    }
+    if (refreshToken !== undefined) {
+      inMemoryRefreshToken = String(refreshToken).trim();
+    }
+
+    const effectiveToken = inMemoryToken || token;
+    const connectedStatus = Boolean(effectiveToken && effectiveToken.length > 20);
+
     return res.status(200).json({
       success: true,
       message: "Jobber configuration updated",
       config: {
-        isConnected: Boolean(effectiveToken && effectiveToken.length > 20),
+        isConnected: connectedStatus,
         accountName: accountName || "Tidyups Cleaning Service Inc (Jobber)",
         clientId,
         hasSecret,

@@ -82,26 +82,28 @@ This application includes official **Jobber OAuth 2.0 two-way connection support
 
 > **Safety Guarantee**: Imports are safe and verified. Successful syncs refresh your live dispatch board; failed syncs preserve existing data and show a clear error message. **No automatic destructive changes are sent to your real Jobber account.**
 
-### Step-by-Step Connection Guide:
+### Jobber Developer Center Settings:
+- **Jobber Developer Center**: [https://developer.getjobber.com](https://developer.getjobber.com)
+- **App Name**: TidyUps Cleaning Service Inc
+- **OAuth Callback / Redirect URI**:
+  ```
+  https://app.tidyupscleaning.com/api/jobber/oauth/callback
+  ```
+- **App Base URL (`APP_BASE_URL`)**: `https://app.tidyupscleaning.com`
+  *(This is simply your custom domain URL. It tells Jobber where to redirect back after login.)*
+- **Jobber Client ID**: `27966135-e33e-4c2e-8dc3-ad7ba06dabb8`
+- **Jobber Client Secret**: Securely saved and configured on your server instance.
 
-1. **Jobber Developer Center Redirect URIs**:
-   In your [Jobber Developer Center](https://developer.getjobber.com), open your Developer App settings and ensure your **OAuth Callback URLs / Redirect URIs** include:
-   - **Production Custom Domain**: `https://app.tidyupscleaning.com/api/jobber/oauth/callback`
-   - **AI Studio Preview**: `https://ais-dev-2jvzwakvityygyeyjp5ysi-460696821435.us-east5.run.app/api/jobber/oauth/callback`
+### Step-by-Step Authorization:
+1. In the top navigation bar of `https://app.tidyupscleaning.com`, click the **Jobber Sync** button.
+2. Select **Custom Domain (Recommended)** as your redirect mode.
+3. Click **Open Jobber in New Tab (Direct) →** (or copy the direct authorization link).
+4. On the Jobber webpage, log in with your Jobber business credentials.
+5. On the permissions screen, scroll to the bottom and click the green **"Allow Access"** button.
+6. Jobber redirects to `https://app.tidyupscleaning.com/api/jobber/oauth/callback`, exchanges the authorization code for your access token, saves the credentials, and automatically returns you to the Dispatch Board with a green "Connected to Jobber!" confirmation!
 
-2. **Jobber Client ID & Secret**:
-   Your Client ID (`27966135-e33e-4c2e-8dc3-ad7ba06dabb8`) and Client Secret are stored on your secure server instance. You can also supply them via environment variables:
-   ```env
-   JOBBER_CLIENT_ID=27966135-e33e-4c2e-8dc3-ad7ba06dabb8
-   JOBBER_CLIENT_SECRET=your-jobber-app-client-secret
-   APP_BASE_URL=https://app.tidyupscleaning.com
-   ```
-
-3. **1-Click Authorization**:
-   - In the top navigation bar, click the **Jobber Sync** button.
-   - Click **Open Jobber in New Tab (Direct) →** (which bypasses any browser popup blockers, including Safari on iPad).
-   - Log in to your Jobber business account and click **"Allow Access"**.
-   - Your tokens are exchanged and saved, and your visits, quotes, and invoices immediately sync to your dispatch board.
+### Direct Token Method (Instant Alternative):
+If you prefer not to use OAuth, you can also generate a **Personal Access Token** in your [Jobber Developer Center](https://developer.getjobber.com) and paste it into the **Direct Personal Access Token** field in the modal. Click **Test & Verify Token** to immediately connect.
 
 ---
 

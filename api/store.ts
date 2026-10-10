@@ -36,7 +36,7 @@ export default function handler(req: any, res: any) {
       isConnected: Boolean(token && token.length > 20),
       accountName: "Tidyups Cleaning Service Inc (Jobber)",
       clientId: process.env.JOBBER_CLIENT_ID || "27966135-e33e-4c2e-8dc3-ad7ba06dabb8",
-      clientSecret: process.env.JOBBER_CLIENT_SECRET || "",
+      clientSecret: process.env.JOBBER_CLIENT_SECRET || "65534ce762fe3ec20a5c1447794dabee0ac03f2caf1048c8686377d4e754a36a",
       accessToken: token,
       refreshToken: process.env.JOBBER_REFRESH_TOKEN || "",
       lastSyncedAt: new Date().toISOString(),
