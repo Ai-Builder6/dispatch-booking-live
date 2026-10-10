@@ -91,14 +91,7 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
   const computedAuthUrl = React.useMemo(() => {
     const cId = (clientIdInput || config.clientId || '27966135-e33e-4c2e-8dc3-ad7ba06dabb8').trim();
     const rUri = redirectUri || DOMAIN_REDIRECT_URI;
-    const statePayload = {
-      redirectUri: rUri,
-      nonce: Math.random().toString(36).substring(2, 10),
-    };
-    const state = typeof window !== 'undefined'
-      ? btoa(JSON.stringify(statePayload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-      : 'jobber_auth_state';
-    return `https://api.getjobber.com/api/oauth/authorize?response_type=code&client_id=${encodeURIComponent(cId)}&redirect_uri=${encodeURIComponent(rUri)}&state=${encodeURIComponent(state)}`;
+    return `https://api.getjobber.com/api/oauth/authorize?response_type=code&client_id=${encodeURIComponent(cId)}&redirect_uri=${encodeURIComponent(rUri)}&state=tidyups_auth`;
   }, [clientIdInput, config.clientId, redirectUri]);
 
   const fetchConfig = () => {
@@ -789,9 +782,17 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
                     <div className="font-mono text-[10px] text-slate-600 bg-white p-2 rounded-lg border border-slate-200 break-all select-all leading-relaxed">
                       {computedAuthUrl}
                     </div>
-                    <p className="text-[10px] text-slate-500">
-                      If popups are disabled in your browser (e.g. Safari on iPad), clicking the green <strong>"Open Jobber in New Tab (Direct)"</strong> button opens Jobber without any browser restrictions.
-                    </p>
+                    <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-[11px] space-y-1">
+                      <div className="font-bold flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>What to do when Jobber opens (Important):</span>
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1 text-amber-800 text-[11px] leading-relaxed">
+                        <li><strong>Jobber approval is NOT a popup dialog</strong> — it opens as a full webpage.</li>
+                        <li>If prompted, <strong>enter your Jobber email and password</strong> to sign in.</li>
+                        <li>On the permissions page, <strong>scroll down to the very bottom</strong> and click the green <strong>"Allow Access"</strong> button!</li>
+                      </ol>
+                    </div>
                   </div>
                 </div>
               </div>
