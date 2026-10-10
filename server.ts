@@ -932,19 +932,17 @@ Extract and structure the voice transcript into a JSON Cleaning Service booking 
 });
 
 function getAppBaseUrl(req: express.Request): string {
+  if (process.env.APP_BASE_URL) return process.env.APP_BASE_URL.replace(/\/$/, "");
   // Jobber strictly requires HTTPS for OAuth redirect URIs
   const forwardedHost = (req.headers["x-forwarded-host"] as string) || req.get("host") || "";
+  if (forwardedHost.includes("tidyupscleaning.com")) {
+    return "https://app.tidyupscleaning.com";
+  }
   if (forwardedHost.includes("run.app") || forwardedHost.includes("ais-")) {
     return `https://${forwardedHost}`;
   }
-  const forwardedProto = req.headers["x-forwarded-proto"] as string;
-  const proto = forwardedProto || req.protocol || "https";
-  const host = forwardedHost || "localhost:3000";
-  // Always use https unless explicitly on local dev without tunnel
-  if (host.includes("localhost") && !forwardedProto) {
-    return `https://${host}`;
-  }
-  return `https://${host}`;
+  // Production domain where the Jobber Redirect URI is registered
+  return "https://app.tidyupscleaning.com";
 }
 
 // Jobber Developer App & GraphQL Integration Endpoints (https://developer.getjobber.com/docs)

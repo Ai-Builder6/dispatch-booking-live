@@ -1,32 +1,62 @@
-# Day-1-Dispatch-Board-Tidyups
+# TidyUps Cleaning Service — Dispatch & Operations Platform
 
 **TidyUps Cleaning Service Inc. — Live Production Dispatch Console**  
-Target Domain: [https://tidyupsbooking.com](https://tidyupsbooking.com)  
-Primary Service Territory: Edmonton, Alberta (YEG) and Surrounding Regional Corridors
+Target Production Domain: [https://app.tidyupscleaning.com](https://app.tidyupscleaning.com)  
+Primary Service Territory: Edmonton, Alberta (YEG) and Surrounding Regional Corridors  
+Executive Contact & Admin: `cleaningserviceyeg@gmail.com`
 
 ---
 
-## 🚀 Live Product Overview
-`Day-1-Dispatch-Board-Tidyups` is the live operations console and direct booking system for TidyUps Cleaning Service Inc. Designed from real operational requirements, it powers:
-- **15 Dedicated Cleaners & Solo/Team Units**: Tracking real home hubs in Edmonton (Chappelle, Charlesworth, Keheewin, Oliver, Clareview, Ambleside, Mill Woods, Queen Mary, Secord, Callingwood, Dechene, Westwood, Lorelei, The Hamptons, Jasper Park).
+## 🚀 Production Platform Overview
+`app.tidyupscleaning.com` is the live central operations console, territory dispatch board, and booking management system for TidyUps Cleaning Service Inc.
+
+- **15 Mobile Cleaners & Solo/Team Units**: Tracking real home hubs in Edmonton (Chappelle, Charlesworth, Keheewin, Oliver, Clareview, Ambleside, Mill Woods, Queen Mary, Secord, Callingwood, Dechene, Westwood, Lorelei, The Hamptons, Jasper Park).
 - **Core Cleaning Services**: Standard Cleaning, Deep Cleaning, and Move-Out Cleaning.
-- **Two-Way Jobber Sync Hub**: GraphQL connection for visits, clients, quotes, invoices, and job creation.
+- **Interactive Google Maps Territory Engine**: Live fleet coordinates, real-time vehicle status (On Duty / Available / Off Duty), pin clustering, and Depot Hub addresses with Google Places autocomplete.
+- **Fleet & Van Hub Configuration**: Direct vehicle identifier re-naming, cleaner driver assignment, color branding, and forward geocoding.
+- **Dual-Layer Real-Time Persistence**:
+  - Local resilient JSON database (`data/dispatch_store.json`).
+  - Google Cloud Firestore (`ai-studio-cleaningserviced-8a2493ab-cb9d-4c28-a60b-c28e7d08d30e`) with strict Zero-Trust security rules (`firestore.rules`).
+- **Two-Way Jobber Sync Hub**: GraphQL connection for calendar visits, clients database, quotes pipeline, and billing invoices.
+- **Multi-User RBAC & Authentication**: Role switching and verified Firebase Authentication for Executive Owner (`cleaningserviceyeg@gmail.com`), Lead Dispatcher, and Field Cleaners.
 - **AI Voice-to-Text & Lead Intake**: Direct microphone voice dictation and copy-paste intake for Facebook Ads & SMS leads.
-- **Google Maps Platform Integration**: Edmonton territory visualization, address reverse-geocoding, and multi-stop drive calculation.
+- **Customer Booking Portal**: Public estimate request and self-serve booking interface.
+
+---
+
+## 🌐 Deep Link Navigation Routes
+
+All deep links are active directly on `https://app.tidyupscleaning.com`:
+
+| Route / Hash | View Destination | Primary Features |
+|---|---|---|
+| `https://app.tidyupscleaning.com/` | Interactive Live Map | Territory pins, fleet routing, job visits, van hubs |
+| `https://app.tidyupscleaning.com/book` | Customer Booking Portal | Public estimate requests, pricing calculator |
+| `https://app.tidyupscleaning.com/management` | Management Hub | Quotes, invoices, staff roster, Firestore sync |
+| `https://app.tidyupscleaning.com/clients` | Clients Database | Client records, contact history, lead verdicts |
+| `https://app.tidyupscleaning.com/quotes` | Quotes Pipeline | Estimates, approved quotes, Jobber sync |
+| `https://app.tidyupscleaning.com/invoices` | Invoices & Billing | Due balances, payment status, Jobber invoicing |
+| `https://app.tidyupscleaning.com/jobs` | Scheduled Calendar | Monthly/weekly visits, cleaner assignments |
+| `https://app.tidyupscleaning.com/unscheduled` | Unscheduled Queue | Pending job requests, one-click approvals |
+| `https://app.tidyupscleaning.com/staff` | Staff Roster Modal | CSV spreadsheet sync, archive & role management |
+| `https://app.tidyupscleaning.com/support` | Support Desk | Operations policies, satisfaction guarantee |
+| `https://app.tidyupscleaning.com/t&c` | Terms & Conditions | Customer agreements, deposit clauses |
+| `https://app.tidyupscleaning.com/privacy-policy` | Privacy Policy | PIPEDA & Alberta PIPA compliance disclosures |
 
 ---
 
 ## 🛠️ Tech Stack & Architecture
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Lucide Icons, `@vis.gl/react-google-maps`.
-- **Backend**: Express on Node.js / `tsx` with server-side proxy routes for Jobber and Google APIs.
-- **Database**: Persistent JSON store (`data/dispatch_store.json`).
-- **AI & Grounding**: Google GenAI SDK (`@google/genai`).
+- **Backend**: Express on Node.js / `tsx` with server-side proxy routes for Jobber, Geocoding, Places, and Google APIs.
+- **Databases**: 
+  - Google Cloud Firestore (`ai-studio-cleaningserviced-8a2493ab-cb9d-4c28-a60b-c28e7d08d30e`).
+  - Persistent JSON store (`data/dispatch_store.json`).
+- **Authentication**: Firebase Authentication with Google Sign-In and RBAC role validation.
+- **AI Engine**: Google GenAI SDK (`@google/genai`).
 
 ---
 
-## ⚡ Instant Setup & Launch (Antigravity & Development Sandboxes)
-
-This product is engineered to run seamlessly just by opening the folder or cloning the repo.
+## ⚡ Instant Setup & Local Launch
 
 ### 1. Install Dependencies
 ```bash
@@ -40,23 +70,19 @@ npm run dev
 npm start
 ```
 
-- The server boots immediately on port `3000` (or your environment's `$PORT`).
-- **No external database required to start**: Persistent operational data is self-contained in `data/dispatch_store.json`, pre-loaded with:
-  - 15 Edmonton Cleaning Staff & Solo/Team units
-  - Real September & October 2026 scheduled visits with assigned cleaners
-  - Jobber Quotes & Invoices ledger for Tidyups Cleaning Service Inc.
-  - Interactive map coordinates across Edmonton territories
-- **Full Hot-Reloading**: Frontend Vite SPA runs with middleware proxy directly on the backend Express server.
+- Server starts on port `3000` (or `$PORT`).
+- **No external database required to start**: Operational data is pre-populated in `data/dispatch_store.json`.
+- **Hot Reloading & Full-Stack Proxy**: Express middleware powers live routes and proxies for Google Maps and Jobber.
 
 ---
 
 ## 🔗 Connecting Your Real Jobber Business Account
 
-This application includes official **Jobber OAuth 2.0 connection support** with **read-only imports** for visits, clients, quotes, and invoices, plus status and unassigned-cleaner filters. 
+This application includes official **Jobber OAuth 2.0 connection support** with **read-only imports** for visits, clients, quotes, and invoices.
 
-> **Safety Guarantee**: Imports are **read-only**. Successful syncs refresh your live dispatch board; failed syncs preserve existing data and show a clear error message. **No automatic changes are sent to your real Jobber jobs.**
+> **Safety Guarantee**: Imports are **read-only**. Successful syncs refresh your live dispatch board; failed syncs preserve existing data and show a clear error message. **No automatic destructive changes are sent to your real Jobber account.**
 
-### 3-Step Connection Guide:
+### Connection Guide:
 
 1. **Configure Environment Variables**:
    Copy `.env.example` to `.env` in the app root:
@@ -75,29 +101,28 @@ This application includes official **Jobber OAuth 2.0 connection support** with 
    - Go to the [Jobber Developer Center](https://developer.getjobber.com).
    - In your Developer App settings, set the **OAuth Redirect URI** to your exact HTTPS URL:
      `https://app.tidyupscleaning.com/api/jobber/oauth/callback`
-   - Open your dispatch app through that HTTPS address.
+   - Access the platform via `https://app.tidyupscleaning.com`.
 
 3. **Authorize Your Real Business Account**:
    - In the dispatch app, click **Jobber Sync & CSV Import** (or **Authorize in Jobber**).
    - Sign in to your real business account as an administrator and approve access.
    - Click **Sync Calendar & Visits** to import real visits into your dispatch board.
 
-The developer app supplies the API credentials; your business account grants access. Keep secrets out of chat.
-
 ---
 
 ## 📦 How to Push to GitHub
 
-1. Create a new repository on your GitHub account named:
-   **`Day-1-Dispatch-Board-Tidyups`**
-
-2. Run the following command in your terminal:
+1. Set your remote repository:
    ```bash
    git remote add origin https://github.com/<YOUR-GITHUB-USERNAME>/Day-1-Dispatch-Board-Tidyups.git
+   ```
+
+2. Push changes:
+   ```bash
    git push -u origin main --tags
    ```
 
 ---
 
 ## 📄 License & Confidentiality
-Property of TidyUps Cleaning Service Inc. (cleaningserviceyeg@gmail.com). All rights reserved.
+Property of TidyUps Cleaning Service Inc. (`cleaningserviceyeg@gmail.com`). All rights reserved. Live platform hosted at [https://app.tidyupscleaning.com](https://app.tidyupscleaning.com).

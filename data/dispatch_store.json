@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastSavedAt": "2026-10-08T00:15:43.752Z",
+  "lastSavedAt": "2026-10-10T18:19:28.875Z",
   "tickets": [],
   "cleanerOverrides": {
     "cleaner-1": {
@@ -1143,7 +1143,7 @@
         "1 Joseph Juma"
       ],
       "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/28912045"
     },
     {
@@ -1159,7 +1159,7 @@
         "Jasmin Kunin"
       ],
       "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/28912015"
     },
     {
@@ -1176,7 +1176,7 @@
         "Sergine Ngongang wetie"
       ],
       "serviceType": "Move-Out Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/28912013"
     },
     {
@@ -1193,7 +1193,7 @@
         "Joel MBATCHOU"
       ],
       "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/289120503"
     },
     {
@@ -1209,24 +1209,24 @@
         "Jasmin Kunin"
       ],
       "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/28912013"
     },
     {
-      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMjc=",
-      "visitNumber": "VISIT-89120",
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTc1MTg3NTU=",
+      "visitNumber": "VISIT-12013",
       "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
-      "clientName": "gail",
+      "clientName": "Gail Wilkinson",
       "clientPhone": "7804350960",
       "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
       "startAt": "2026-10-07T16:00:00Z",
-      "endAt": "2026-10-07T19:00:00Z",
+      "endAt": "2026-10-07T20:00:00Z",
       "assignedCleaners": [
         "Cindy Guay"
       ],
       "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
-      "jobberWebUri": "https://secure.getjobber.com/visits/289120"
+      "status": "COMPLETED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/28912013"
     },
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTQ0Mjk2MDc=",
@@ -1242,7 +1242,7 @@
         "Sergine Ngongang wetie"
       ],
       "serviceType": "Move-Out Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/28912002"
     },
     {
@@ -1258,7 +1258,7 @@
         "Jasmin Kunin"
       ],
       "serviceType": "Deep Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/289120"
     },
     {
@@ -1275,8 +1275,24 @@
         "Sergine Ngongang wetie"
       ],
       "serviceType": "Move-Out Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/289120"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTQ5NTg0Mzk=",
+      "visitNumber": "VISIT-12050",
+      "title": "Olga Lebedeva - Basic Cleaning Services",
+      "clientName": "Olga Lebedeva",
+      "clientPhone": "780-708-5713",
+      "serviceAddress": "44-10453 20 ave NW, Edmonton, AB",
+      "startAt": "2026-10-08T15:00:00Z",
+      "endAt": "2026-10-08T19:00:00Z",
+      "assignedCleaners": [
+        "Cindy Guay"
+      ],
+      "serviceType": "Standard Cleaning",
+      "status": "COMPLETED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/28912050"
     },
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIwMTYwMjAxOTQ=",
@@ -1291,24 +1307,42 @@
         "1 Joseph Juma"
       ],
       "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/289120"
     },
     {
-      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTQ5NTg0Mzk=",
-      "visitNumber": "VISIT-12050",
-      "title": "Olga Lebedeva - Basic Cleaning Services",
-      "clientName": "Olga Lebedeva",
-      "clientPhone": "780-708-5713",
-      "serviceAddress": "44-10453 20 ave NW, Edmonton, AB",
-      "startAt": "2026-10-08T16:00:00Z",
-      "endAt": "2026-10-08T20:00:00Z",
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTYzMjk3Mzc=",
+      "visitNumber": "VISIT-91203",
+      "title": "Alawi Agroomah - 2Bed 2Bath Deep Cleaning 2026",
+      "clientName": "Alawi Agroomah",
+      "clientPhone": "6478349444",
+      "serviceAddress": "320 Ambleside Link Southwest 221, Edmonton, Alberta",
+      "startAt": "2026-10-08T18:30:00Z",
+      "endAt": "2026-10-08T20:30:00Z",
       "assignedCleaners": [
+        "Jasmin Kunin",
         "Cindy Guay"
       ],
-      "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
-      "jobberWebUri": "https://secure.getjobber.com/visits/28912050"
+      "serviceType": "Deep Cleaning",
+      "status": "COMPLETED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/2891203"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTg4MjgwNzQ=",
+      "visitNumber": "VISIT-91204",
+      "title": "Jaskaranjit Dhaliwal - Move Out Cleaning Services 2026",
+      "clientName": "Jaskaranjit Dhaliwal",
+      "clientPhone": "(780) 394-4846",
+      "serviceAddress": "173 Cornell Court, Edmonton, Alberta",
+      "startAt": "2026-10-08T19:30:00Z",
+      "endAt": "2026-10-08T21:30:00Z",
+      "assignedCleaners": [
+        "Sergine Ngongang wetie",
+        "Joel MBATCHOU"
+      ],
+      "serviceType": "Move-Out Cleaning",
+      "status": "COMPLETED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/2891204"
     },
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIxNjIxMDczNjE=",
@@ -1323,8 +1357,25 @@
         "Sergine Ngongang wetie"
       ],
       "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
+      "status": "COMPLETED",
       "jobberWebUri": "https://secure.getjobber.com/visits/289120"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTkyNDk4MDg=",
+      "visitNumber": "VISIT-91204",
+      "title": "Parin Daya - Initial Basic Cleaning",
+      "clientName": "Parin Daya",
+      "clientPhone": "403-560-3307",
+      "serviceAddress": "839 Drysdale Run Northwest, Edmonton, Alberta",
+      "startAt": "2026-10-10T16:00:00Z",
+      "endAt": "2026-10-10T18:00:00Z",
+      "assignedCleaners": [
+        "Joel MBATCHOU",
+        "Sergine Ngongang wetie"
+      ],
+      "serviceType": "Standard Cleaning",
+      "status": "SCHEDULED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/2891204"
     },
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzMDUyOTg5MDM=",
@@ -1409,6 +1460,22 @@
       "jobberWebUri": "https://secure.getjobber.com/visits/289120"
     },
     {
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTc2MjY0NTI=",
+      "visitNumber": "VISIT-12020",
+      "title": "Gail Wilkinson - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "clientName": "Gail Wilkinson",
+      "clientPhone": "7804350960",
+      "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
+      "startAt": "2026-10-14T15:00:00Z",
+      "endAt": "2026-10-14T19:00:00Z",
+      "assignedCleaners": [
+        "Cindy Guay"
+      ],
+      "serviceType": "Standard Cleaning",
+      "status": "SCHEDULED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/28912020"
+    },
+    {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzMjEwMTYzNjk=",
       "visitNumber": "VISIT-89120",
       "title": "Melanie Frattinger - Melanie Frattinger",
@@ -1419,22 +1486,6 @@
       "endAt": "2026-10-14T20:00:00Z",
       "assignedCleaners": [
         "Jasmin Kunin"
-      ],
-      "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
-      "jobberWebUri": "https://secure.getjobber.com/visits/289120"
-    },
-    {
-      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMjg=",
-      "visitNumber": "VISIT-89120",
-      "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
-      "clientName": "gail",
-      "clientPhone": "7804350960",
-      "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
-      "startAt": "2026-10-14T16:00:00Z",
-      "endAt": "2026-10-14T19:00:00Z",
-      "assignedCleaners": [
-        "Cindy Guay"
       ],
       "serviceType": "Standard Cleaning",
       "status": "SCHEDULED",
@@ -1539,6 +1590,22 @@
       "jobberWebUri": "https://secure.getjobber.com/visits/28912015"
     },
     {
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTc2MjY0NTM=",
+      "visitNumber": "VISIT-12020",
+      "title": "Gail Wilkinson - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "clientName": "Gail Wilkinson",
+      "clientPhone": "7804350960",
+      "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
+      "startAt": "2026-10-21T15:00:00Z",
+      "endAt": "2026-10-21T19:00:00Z",
+      "assignedCleaners": [
+        "Cindy Guay"
+      ],
+      "serviceType": "Standard Cleaning",
+      "status": "SCHEDULED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/28912020"
+    },
+    {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIyNDk1NDU3NzM=",
       "visitNumber": "VISIT-12013",
       "title": "Suchi Jobanputra - Suchi Jobanputra",
@@ -1553,22 +1620,6 @@
       "serviceType": "Standard Cleaning",
       "status": "SCHEDULED",
       "jobberWebUri": "https://secure.getjobber.com/visits/28912013"
-    },
-    {
-      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMjk=",
-      "visitNumber": "VISIT-89120",
-      "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
-      "clientName": "gail",
-      "clientPhone": "7804350960",
-      "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
-      "startAt": "2026-10-21T16:00:00Z",
-      "endAt": "2026-10-21T19:00:00Z",
-      "assignedCleaners": [
-        "Cindy Guay"
-      ],
-      "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
-      "jobberWebUri": "https://secure.getjobber.com/visits/289120"
     },
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTQ0NDMxODQ=",
@@ -1770,6 +1821,22 @@
       "jobberWebUri": "https://secure.getjobber.com/visits/289120"
     },
     {
+      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNTc2MjY0NTU=",
+      "visitNumber": "VISIT-12020",
+      "title": "Gail Wilkinson - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "clientName": "Gail Wilkinson",
+      "clientPhone": "7804350960",
+      "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
+      "startAt": "2026-10-28T15:00:00Z",
+      "endAt": "2026-10-28T19:00:00Z",
+      "assignedCleaners": [
+        "Cindy Guay"
+      ],
+      "serviceType": "Standard Cleaning",
+      "status": "SCHEDULED",
+      "jobberWebUri": "https://secure.getjobber.com/visits/28912020"
+    },
+    {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIxNDgzNDI2NTM=",
       "visitNumber": "VISIT-91202",
       "title": "Chris Reaume - 2Bed 2Bath Deep Cleaning 2026",
@@ -1801,22 +1868,6 @@
       "serviceType": "Deep Cleaning",
       "status": "SCHEDULED",
       "jobberWebUri": "https://secure.getjobber.com/visits/2891203"
-    },
-    {
-      "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIzNDQzNjMxMzA=",
-      "visitNumber": "VISIT-89120",
-      "title": "gail - Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
-      "clientName": "gail",
-      "clientPhone": "7804350960",
-      "serviceAddress": "1517 Bearspaw Dr E Northwest, Edmonton, AB, Canada, Edmonton, AB",
-      "startAt": "2026-10-28T16:00:00Z",
-      "endAt": "2026-10-28T19:00:00Z",
-      "assignedCleaners": [
-        "Cindy Guay"
-      ],
-      "serviceType": "Standard Cleaning",
-      "status": "SCHEDULED",
-      "jobberWebUri": "https://secure.getjobber.com/visits/289120"
     },
     {
       "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzIyMDg4NTE3NTM=",
@@ -2698,6 +2749,175 @@
   ],
   "invoices": [
     {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MzMzNzk5",
+      "invoiceNumber": "INV-236085",
+      "clientName": "Alawi Agroomah",
+      "clientPhone": "6478349444",
+      "service": "2Bed 2Bath Deep Cleaning 2026",
+      "invoiceStatus": "PAID",
+      "total": 351.57,
+      "balance": 0,
+      "issuedDate": "2026-10-09",
+      "dueDate": "2026-10-08",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/28909215"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1NDU4NTE5",
+      "invoiceNumber": "INV-236086",
+      "clientName": "Mike Brown",
+      "clientPhone": "(780) 905-3537",
+      "service": "2bed 2 bath Initial Basic Cleaning",
+      "invoiceStatus": "AWAITING_PAYMENT",
+      "total": 204.19,
+      "balance": 204.19,
+      "issuedDate": "2026-10-09",
+      "dueDate": "2026-10-09",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/289092145"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MzA0NjEz",
+      "invoiceNumber": "INV-236081",
+      "clientName": "Samantha Smits",
+      "clientPhone": "7802712257",
+      "service": "Deep Cleaning - biweekly 3hrs",
+      "invoiceStatus": "PAID",
+      "total": 168.19,
+      "balance": 0,
+      "issuedDate": "2026-10-08",
+      "dueDate": "2026-10-08",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/28909210"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MzE4OTM3",
+      "invoiceNumber": "INV-236082",
+      "clientName": "Joel Vaillancourt",
+      "clientPhone": "7806955890",
+      "service": "Joel Vaillancourt",
+      "invoiceStatus": "PAID",
+      "total": 206.44,
+      "balance": 0,
+      "issuedDate": "2026-10-08",
+      "dueDate": "2026-10-08",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/289092143"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MzI5OTE0",
+      "invoiceNumber": "INV-236083",
+      "clientName": "derek",
+      "clientPhone": "(780) 238-2803",
+      "service": "Move In Or A Move Out Clean — Thursday, October 8, 2026 at 9:00 AM",
+      "invoiceStatus": "PAID",
+      "total": 452.81,
+      "balance": 0,
+      "issuedDate": "2026-10-08",
+      "dueDate": "2026-10-08",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/289092150"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MTc5NzM1",
+      "invoiceNumber": "INV-236079",
+      "clientName": "Jaskaranjit Dhaliwal",
+      "clientPhone": "(780) 394-4846",
+      "service": "Move Out Cleaning Services 2026",
+      "invoiceStatus": "PAID",
+      "total": 753.75,
+      "balance": 0,
+      "issuedDate": "2026-10-08",
+      "dueDate": "2026-10-07",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/289092151"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MDEzOTQz",
+      "invoiceNumber": "INV-236076",
+      "clientName": "Waldemar Dutra",
+      "clientPhone": "7809904635",
+      "service": "Move Out Cleaning Services 2026",
+      "invoiceStatus": "PAID",
+      "total": 320.63,
+      "balance": 0,
+      "issuedDate": "2026-10-07",
+      "dueDate": "2026-10-06",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/2890921"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1Mjg5MTk0",
+      "invoiceNumber": "INV-236080",
+      "clientName": "Olga Lebedeva",
+      "clientPhone": "780-708-5713",
+      "service": "Basic Cleaning Services",
+      "invoiceStatus": "PAID",
+      "total": 162.57,
+      "balance": 0,
+      "issuedDate": "2026-10-08",
+      "dueDate": "2026-10-08",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/289092150"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MTcwODIx",
+      "invoiceNumber": "INV-236078",
+      "clientName": "Trevor Gauthier",
+      "clientPhone": "7808089176",
+      "service": "Basic Cleaning Services 2025",
+      "invoiceStatus": "PAID",
+      "total": 250.32,
+      "balance": 0,
+      "issuedDate": "2026-10-07",
+      "dueDate": "2026-10-07",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/2890921"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MTI2ODE0",
+      "invoiceNumber": "INV-236077",
+      "clientName": "Gail Wilkinson",
+      "clientPhone": "7804350960",
+      "service": "Standard Home Cleaning — Wednesday, September 23, 2026 at 9:00 AM",
+      "invoiceStatus": "PAID",
+      "total": 212.07,
+      "balance": 0,
+      "issuedDate": "2026-10-07",
+      "dueDate": "2026-10-07",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/289092120"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc1MDEwMzkz",
+      "invoiceNumber": "INV-236075",
+      "clientName": "Ian Peters",
+      "clientPhone": "7807140464",
+      "service": "Ian Peters",
+      "invoiceStatus": "PAID",
+      "total": 217.69,
+      "balance": 0,
+      "issuedDate": "2026-10-06",
+      "dueDate": "2026-10-06",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/2890921"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc0ODEzOTEx",
+      "invoiceNumber": "INV-236072",
+      "clientName": "Sindhu Murugavel",
+      "clientPhone": "7809836571",
+      "service": "Sindhu Murugavel",
+      "invoiceStatus": "PAID",
+      "total": 316.69,
+      "balance": 0,
+      "issuedDate": "2026-10-05",
+      "dueDate": "2026-10-05",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/2890920"
+    },
+    {
+      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc0ODMyOTcy",
+      "invoiceNumber": "INV-236074",
+      "clientName": "Owa & Alex Iseghohi",
+      "clientPhone": "9175707964",
+      "service": "Airbnb Turnover: Basic Cleaning Services ",
+      "invoiceStatus": "PAID",
+      "total": 104.07,
+      "balance": 0,
+      "issuedDate": "2026-10-05",
+      "dueDate": "2026-10-05",
+      "jobberWebUri": "https://secure.getjobber.com/invoices/2890920"
+    },
+    {
       "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc0ODMxNTU2",
       "invoiceNumber": "INV-236073",
       "clientName": "Adam Joly",
@@ -2709,32 +2929,6 @@
       "issuedDate": "2026-10-05",
       "dueDate": "2026-10-05",
       "jobberWebUri": "https://secure.getjobber.com/invoices/28909202"
-    },
-    {
-      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc0ODMyOTcy",
-      "invoiceNumber": "INV-236074",
-      "clientName": "Owa & Alex Iseghohi",
-      "clientPhone": "9175707964",
-      "service": "Airbnb Turnover: Basic Cleaning Services ",
-      "invoiceStatus": "PAST_DUE",
-      "total": 104.07,
-      "balance": 104.07,
-      "issuedDate": "2026-10-05",
-      "dueDate": "2026-10-05",
-      "jobberWebUri": "https://secure.getjobber.com/invoices/2890920"
-    },
-    {
-      "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc0ODEzOTEx",
-      "invoiceNumber": "INV-236072",
-      "clientName": "Sindhu Murugavel",
-      "clientPhone": "7809836571",
-      "service": "Sindhu Murugavel",
-      "invoiceStatus": "PAST_DUE",
-      "total": 316.69,
-      "balance": 316.69,
-      "issuedDate": "2026-10-05",
-      "dueDate": "2026-10-05",
-      "jobberWebUri": "https://secure.getjobber.com/invoices/2890920"
     },
     {
       "id": "Z2lkOi8vSm9iYmVyL0ludm9pY2UvMTc0NTQzNjM1",
@@ -3497,10 +3691,10 @@
     "isConnected": true,
     "accountName": "Tidyups Cleaning Service Inc",
     "clientId": "27966135-e33e-4c2e-8dc3-ad7ba06dabb8",
-    "clientSecret": "",
-    "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOjE1ODAxNzYsImlzcyI6Imh0dHBzOi8vYXBpLmdldGpvYmJlci5jb20iLCJjbGllbnRfaWQiOiIyNzk2NjEzNS1lMzNlLTRjMmUtOGRjMy1hZDdiYTA2ZGFiYjgiLCJzY29wZSI6InJlYWRfY2xpZW50cyB3cml0ZV9jbGllbnRzIHJlYWRfcmVxdWVzdHMgd3JpdGVfcmVxdWVzdHMgcmVhZF9xdW90ZXMgd3JpdGVfcXVvdGVzIHJlYWRfam9icyB3cml0ZV9qb2JzIHJlYWRfc2NoZWR1bGVkX2l0ZW1zIHdyaXRlX3NjaGVkdWxlZF9pdGVtcyByZWFkX2ludm9pY2VzIHdyaXRlX2ludm9pY2VzIHJlYWRfam9iYmVyX3BheW1lbnRzIHJlYWRfdXNlcnMgd3JpdGVfdXNlcnMgd3JpdGVfdGF4X3JhdGVzIHJlYWRfZXhwZW5zZXMgd3JpdGVfZXhwZW5zZXMgcmVhZF9jdXN0b21fZmllbGRfY29uZmlndXJhdGlvbnMgd3JpdGVfY3VzdG9tX2ZpZWxkX2NvbmZpZ3VyYXRpb25zIHJlYWRfdGltZV9zaGVldHMgcmVhZF9lcXVpcG1lbnQgd3JpdGVfZXF1aXBtZW50IHJlYWRfbWFya2V0aW5nIHdyaXRlX21hcmtldGluZyIsImFwcF9pZCI6IjI3OTY2MTM1LWUzM2UtNGMyZS04ZGMzLWFkN2JhMDZkYWJiOCIsInVzZXJfaWQiOjE1ODAxNzYsImFjY291bnRfaWQiOjcxODU3NiwiYXVkIjpbImh0dHBzOi8vZ2V0am9iYmVyLmNvbS9ncmFwaHFsIl0sImV4cCI6MTc5MTI1ODU0OH0.fQStRFt3wRbrJM81jTCwaHm4ZXtm-Z0ngRdvB7U4dnY",
-    "refreshToken": "7c21c92cb784dce8072d6431af6a8b7a",
-    "lastSyncedAt": "2026-10-06T02:54:40.767Z"
+    "clientSecret": "65534ce762fe3ec20a5c1447794dabee0ac03f2caf1048c8686377d4e754a36a",
+    "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOjE1ODAxNzYsImlzcyI6Imh0dHBzOi8vYXBpLmdldGpvYmJlci5jb20iLCJjbGllbnRfaWQiOiIyNzk2NjEzNS1lMzNlLTRjMmUtOGRjMy1hZDdiYTA2ZGFiYjgiLCJzY29wZSI6InJlYWRfY2xpZW50cyB3cml0ZV9jbGllbnRzIHJlYWRfcmVxdWVzdHMgd3JpdGVfcmVxdWVzdHMgcmVhZF9xdW90ZXMgd3JpdGVfcXVvdGVzIHJlYWRfam9icyB3cml0ZV9qb2JzIHJlYWRfc2NoZWR1bGVkX2l0ZW1zIHdyaXRlX3NjaGVkdWxlZF9pdGVtcyByZWFkX2ludm9pY2VzIHdyaXRlX2ludm9pY2VzIHJlYWRfam9iYmVyX3BheW1lbnRzIHJlYWRfdXNlcnMgd3JpdGVfdXNlcnMgd3JpdGVfdGF4X3JhdGVzIHJlYWRfZXhwZW5zZXMgd3JpdGVfZXhwZW5zZXMgcmVhZF9jdXN0b21fZmllbGRfY29uZmlndXJhdGlvbnMgd3JpdGVfY3VzdG9tX2ZpZWxkX2NvbmZpZ3VyYXRpb25zIHJlYWRfdGltZV9zaGVldHMgcmVhZF9lcXVpcG1lbnQgd3JpdGVfZXF1aXBtZW50IHJlYWRfbWFya2V0aW5nIHdyaXRlX21hcmtldGluZyIsImFwcF9pZCI6IjI3OTY2MTM1LWUzM2UtNGMyZS04ZGMzLWFkN2JhMDZkYWJiOCIsInVzZXJfaWQiOjE1ODAxNzYsImFjY291bnRfaWQiOjcxODU3NiwiYXVkIjpbImh0dHBzOi8vZ2V0am9iYmVyLmNvbS9ncmFwaHFsIl0sImV4cCI6MTc5MTU4NjE0Nn0.OkPgl9EYy0wrSaL5gdp6q4OwgPaZJvNDIFFcM2QVEhA",
+    "refreshToken": "fb6cc6a384c3c9811ef1925325e00043",
+    "lastSyncedAt": "2026-10-09T21:49:06.579Z"
   },
   "chatMessages": [
     {
