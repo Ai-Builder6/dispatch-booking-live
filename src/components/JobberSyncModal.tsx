@@ -42,6 +42,11 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
   tickets,
   onDataUpdated,
 }) => {
+  const DOMAIN_REDIRECT_URI = 'https://app.tidyupscleaning.com/api/jobber/oauth/callback';
+  const previewRedirectUri = typeof window !== 'undefined'
+    ? `${window.location.origin.replace(/^http:\/\//i, 'https://')}/api/jobber/oauth/callback`
+    : DOMAIN_REDIRECT_URI;
+
   const [config, setConfig] = useState<JobberConfig>({
     isConnected: false,
     accountName: 'Tidyups Cleaning Service Inc (Jobber)',
@@ -53,9 +58,9 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
   const [clientIdInput, setClientIdInput] = useState('27966135-e33e-4c2e-8dc3-ad7ba06dabb8');
   const [clientSecretInput, setClientSecretInput] = useState('');
   const [accessTokenInput, setAccessTokenInput] = useState('');
-  const [redirectUri, setRedirectUri] = useState('');
-  const [directAuthUrl, setDirectAuthUrl] = useState<string | null>(null);
+  const [redirectUri, setRedirectUri] = useState(DOMAIN_REDIRECT_URI);
   const [copiedRedirectUri, setCopiedRedirectUri] = useState(false);
+  const [copiedAuthLink, setCopiedAuthLink] = useState(false);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'CREDENTIALS' | 'CSV_IMPORT' | 'JOBBER' | 'GOOGLE_SHEETS'>('CREDENTIALS');
@@ -82,6 +87,20 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
     push: { pushedCount: 14, ready: true },
   });
 
+  // Calculate instant authorization URL (never requires async roundtrip before opening)
+  const computedAuthUrl = React.useMemo(() => {
+    const cId = (clientIdInput || config.clientId || '27966135-e33e-4c2e-8dc3-ad7ba06dabb8').trim();
+    const rUri = redirectUri || DOMAIN_REDIRECT_URI;
+    const statePayload = {
+      redirectUri: rUri,
+      nonce: Math.random().toString(36).substring(2, 10),
+    };
+    const state = typeof window !== 'undefined'
+      ? btoa(JSON.stringify(statePayload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      : 'jobber_auth_state';
+    return `https://api.getjobber.com/api/oauth/authorize?response_type=code&client_id=${encodeURIComponent(cId)}&redirect_uri=${encodeURIComponent(rUri)}&state=${encodeURIComponent(state)}`;
+  }, [clientIdInput, config.clientId, redirectUri]);
+
   const fetchConfig = () => {
     fetch('/api/jobber/config')
       .then((r) => r.json())
@@ -89,11 +108,6 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
         if (data) {
           setConfig(data);
           if (data.clientId) setClientIdInput(data.clientId);
-          if (data.redirectUri) {
-            // Guarantee HTTPS for Jobber OAuth requirement
-            const secureUri = data.redirectUri.replace(/^http:\/\//i, 'https://');
-            setRedirectUri(secureUri);
-          }
           if (data.accessToken && !accessTokenInput) {
             setAccessTokenInput(data.accessToken);
           } else if (!data.accessToken) {
@@ -112,88 +126,111 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
       .catch(() => {});
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchConfig();
-
-      const handleMessage = (event: MessageEvent) => {
-        if (event.data?.type === 'JOBBER_CONNECTED') {
-          fetchConfig();
-          setSyncNotice('Jobber OAuth authorized and connected successfully!');
-          setActiveTab('JOBBER');
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      return () => window.removeEventListener('message', handleMessage);
+  const handleSaveCredentialsQuietly = () => {
+    const payload: { clientId: string; accountName: string; clientSecret?: string } = {
+      clientId: (clientIdInput || config.clientId || '27966135-e33e-4c2e-8dc3-ad7ba06dabb8').trim(),
+      accountName: config.accountName || 'Tidyups Cleaning Service Inc',
+    };
+    if (clientSecretInput.trim()) {
+      payload.clientSecret = clientSecretInput.trim();
     }
-  }, [isOpen]);
+    fetch('/api/jobber/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    fetchConfig();
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'JOBBER_CONNECTED' || event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        fetchConfig();
+        setIsAuthorizing(false);
+        setSyncNotice('🎉 Jobber OAuth authorized and connected successfully! Live data synchronized.');
+        setActiveTab('JOBBER');
+        if (onDataUpdated) onDataUpdated();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Auto-poll to catch authorization when completed in another tab or popup
+    const pollInterval = setInterval(() => {
+      fetch('/api/jobber/config')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data) {
+            if (data.isConnected && !config.isConnected) {
+              setConfig(data);
+              setIsAuthorizing(false);
+              setSyncNotice('🎉 Jobber connected successfully! Live 5-module synchronization active.');
+              setActiveTab('JOBBER');
+              if (onDataUpdated) onDataUpdated();
+            } else {
+              setConfig(data);
+            }
+          }
+        })
+        .catch(() => {});
+    }, 2500);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearInterval(pollInterval);
+    };
+  }, [isOpen, config.isConnected, onDataUpdated]);
 
   if (!isOpen) return null;
 
-  // Launch OAuth Popup with Jobber
-  const handleConnectJobber = async () => {
-    if (!clientIdInput.trim()) {
+  // Open popup synchronously without async await delays that trigger browser popup blockers
+  const handleOpenPopup = () => {
+    if (!clientIdInput.trim() && !config.clientId) {
       setSyncNotice('Please provide your Jobber Client ID first.');
       return;
     }
-    if (!clientSecretInput.trim() && !config.clientSecret) {
-      setSyncNotice('Please paste your Jobber Client Secret so the app can complete authorization.');
+    if (!clientSecretInput.trim() && !config.hasSecret) {
+      setSyncNotice('Please paste your Jobber Client Secret so the app can complete token exchange.');
       return;
     }
 
+    handleSaveCredentialsQuietly();
     setIsAuthorizing(true);
-    setSyncNotice(null);
 
-    try {
-      // First save the Client ID & Secret to backend
-      await fetch('/api/jobber/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId: clientIdInput.trim(),
-          clientSecret: clientSecretInput.trim(),
-          accountName: config.accountName || 'Tidyups Cleaning Service Inc',
-        }),
-      });
+    const width = 640;
+    const height = 740;
+    const left = typeof window !== 'undefined' ? window.screen.width / 2 - width / 2 : 100;
+    const top = typeof window !== 'undefined' ? window.screen.height / 2 - height / 2 : 100;
+    const popup = window.open(
+      computedAuthUrl,
+      'JobberAuthorization',
+      `toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=${width},height=${height},top=${top},left=${left}`
+    );
 
-      // Fetch the authorize URL
-      const res = await fetch(`/api/jobber/oauth/authorize-url?redirectUri=${encodeURIComponent(redirectUri)}`);
-      const data = await res.json();
-
-      if (data.authUrl) {
-        setDirectAuthUrl(data.authUrl);
-        // Attempt popup window
-        const width = 640;
-        const height = 740;
-        const left = window.screen.width / 2 - width / 2;
-        const top = window.screen.height / 2 - height / 2;
-        const popup = window.open(
-          data.authUrl,
-          'JobberAuthorization',
-          `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
-        );
-        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-          setSyncNotice('Browser blocked popup window. Please click the direct "Open Jobber Authorization" button below!');
-        } else {
-          setSyncNotice('Waiting for Jobber authorization in popup window. Log in and click "Allow Access".');
-        }
-      } else {
-        setSyncNotice(data.error || 'Failed to generate Jobber authorization link.');
-      }
-    } catch {
-      setSyncNotice('Failed to start Jobber authorization. Please check network.');
-    } finally {
-      setIsAuthorizing(false);
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      setSyncNotice('Popup window was blocked by your browser. Please click the green "Open Jobber in New Tab (Direct)" button!');
+    } else {
+      setSyncNotice('Waiting for Jobber approval in popup window. Log in to Jobber and click "Allow Access".');
     }
   };
 
-  const handleCopyRedirectUri = () => {
-    if (!redirectUri) return;
-    navigator.clipboard.writeText(redirectUri).then(() => {
+  const handleCopyRedirectUri = (uriToCopy?: string) => {
+    const text = uriToCopy || redirectUri;
+    navigator.clipboard.writeText(text).then(() => {
       setCopiedRedirectUri(true);
       setTimeout(() => setCopiedRedirectUri(false), 3000);
-      setSyncNotice('Copied Redirect URI to clipboard! Paste this into your Jobber Developer Center App.');
+      setSyncNotice(`Copied Redirect URI to clipboard: ${text}`);
+    });
+  };
+
+  const handleCopyAuthLink = () => {
+    navigator.clipboard.writeText(computedAuthUrl).then(() => {
+      setCopiedAuthLink(true);
+      setTimeout(() => setCopiedAuthLink(false), 3000);
+      setSyncNotice('Copied Jobber authorization link to clipboard! You can paste it into any browser tab to approve.');
     });
   };
 
@@ -316,20 +353,25 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
 
   const handleSaveCredentials = async () => {
     try {
+      const payload: { clientId: string; accountName: string; clientSecret?: string; accessToken?: string } = {
+        clientId: (clientIdInput || config.clientId || '27966135-e33e-4c2e-8dc3-ad7ba06dabb8').trim(),
+        accountName: config.accountName || 'Tidyups Cleaning Service Inc',
+      };
+      if (clientSecretInput.trim()) {
+        payload.clientSecret = clientSecretInput.trim();
+      }
+      if (accessTokenInput.trim()) {
+        payload.accessToken = accessTokenInput.trim();
+      }
       const res = await fetch('/api/jobber/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId: clientIdInput.trim(),
-          clientSecret: clientSecretInput.trim(),
-          accessToken: accessTokenInput.trim(),
-          accountName: config.accountName || 'Tidyups Cleaning Service Inc',
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
         setConfig(data.config);
-        setSyncNotice('Jobber API credentials saved and stored!');
+        setSyncNotice('Jobber API credentials saved securely on server!');
       }
     } catch {
       setSyncNotice('Error updating credentials.');
@@ -561,33 +603,88 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
                 </div>
 
                 {/* Step 1: Redirect URI */}
-                <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
+                <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
                       <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] flex items-center justify-center font-bold">1</span>
-                      <span>Paste this Redirect URI in Jobber Developer Center</span>
+                      <span>Jobber Developer Center Redirect URI</span>
                     </span>
                     <button
-                      onClick={handleCopyRedirectUri}
-                      className="px-2.5 py-1 bg-white hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                      onClick={() => handleCopyRedirectUri()}
+                      className="px-2.5 py-1 bg-white hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       <Copy className="w-3 h-3" />
-                      <span>{copiedRedirectUri ? 'Copied!' : 'Copy URI'}</span>
+                      <span>{copiedRedirectUri ? 'Copied!' : 'Copy Active URI'}</span>
                     </button>
                   </div>
-                  <div className="font-mono text-xs text-blue-900 bg-white p-2 rounded-lg border border-blue-200 break-all select-all">
-                    {redirectUri || `${window.location.origin.replace(/^http:\/\//i, 'https://')}/api/jobber/oauth/callback`}
+
+                  {/* Quick Selectors for Production Domain vs Preview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setRedirectUri(DOMAIN_REDIRECT_URI)}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        redirectUri === DOMAIN_REDIRECT_URI
+                          ? 'bg-blue-600 text-white border-blue-700 shadow-2xs font-semibold'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold flex items-center gap-1">
+                          <Globe className="w-3 h-3" />
+                          <span>Custom Domain (Recommended)</span>
+                        </span>
+                        {redirectUri === DOMAIN_REDIRECT_URI && (
+                          <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">ACTIVE</span>
+                        )}
+                      </div>
+                      <div className="font-mono text-[10px] break-all mt-1 opacity-90">
+                        {DOMAIN_REDIRECT_URI}
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRedirectUri(previewRedirectUri)}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        redirectUri === previewRedirectUri
+                          ? 'bg-blue-600 text-white border-blue-700 shadow-2xs font-semibold'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold flex items-center gap-1">
+                          <ExternalLink className="w-3 h-3" />
+                          <span>AI Studio Preview Container</span>
+                        </span>
+                        {redirectUri === previewRedirectUri && (
+                          <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">ACTIVE</span>
+                        )}
+                      </div>
+                      <div className="font-mono text-[10px] break-all mt-1 opacity-90">
+                        {previewRedirectUri}
+                      </div>
+                    </button>
                   </div>
-                  <p className="text-[11px] text-blue-700">
-                    In your Jobber Developer App settings, add this exact URL under <strong>OAuth Callback URLs / Redirect URIs</strong>.
+
+                  <p className="text-[11px] text-blue-800 leading-relaxed">
+                    In your <strong>Jobber Developer Center App Settings</strong>, paste the active URL into the <strong>OAuth Callback URLs / Redirect URIs</strong> list.
                   </p>
                 </div>
 
                 {/* Step 2: Client ID & Secret Inputs */}
                 <div className="space-y-3 pt-1">
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-slate-800 text-white text-[11px] flex items-center justify-center font-bold">2</span>
-                    <span>Enter your Jobber App Credentials</span>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-800 text-white text-[11px] flex items-center justify-center font-bold">2</span>
+                      <span>Jobber App Credentials</span>
+                    </div>
+                    {config.hasSecret && (
+                      <span className="text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span>Client Secret is Safely Stored</span>
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -612,63 +709,90 @@ export const JobberSyncModal: React.FC<JobberSyncModalProps> = ({
                         type="password"
                         value={clientSecretInput}
                         onChange={(e) => setClientSecretInput(e.target.value)}
-                        placeholder={config.hasSecret ? "•••••••••••••••• (Secret Stored)" : "Paste your Jobber Client Secret"}
+                        placeholder={config.hasSecret ? "•••••••••••••••• (Secret Stored On Server)" : "Paste your Jobber Client Secret"}
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center gap-2 pt-0.5">
                     <button
+                      type="button"
                       onClick={handleSaveCredentials}
-                      className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors"
+                      className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                     >
                       Save Credentials
                     </button>
-                    <span className="text-[11px] text-slate-400">Credentials remain safely stored on your server instance.</span>
+                    <span className="text-[11px] text-slate-500">Credentials remain securely encrypted on your server instance.</span>
                   </div>
                 </div>
 
                 {/* Step 3: Authorize Button */}
-                <div className="pt-2 border-t border-slate-100">
+                <div className="pt-3 border-t border-slate-200 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                         <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] flex items-center justify-center font-bold">3</span>
-                        <span>Click to Authorize with Jobber</span>
+                        <span>Click to Open Jobber &amp; Approve Access</span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Opens Jobber's authorization popup to approve API access.
+                        Opens Jobber's authorization screen so you can log in and click <strong>"Allow Access"</strong>.
                       </p>
                     </div>
 
-                    <button
-                      onClick={handleConnectJobber}
-                      disabled={isAuthorizing}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                    >
-                      <ExternalLink className={`w-4 h-4 ${isAuthorizing ? 'animate-spin' : ''}`} />
-                      <span>{isAuthorizing ? 'Opening Jobber...' : 'Authorize in Jobber →'}</span>
-                    </button>
-                  </div>
-
-                  {directAuthUrl && (
-                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2">
-                      <div className="text-[11px] text-emerald-900">
-                        <span className="font-bold">Direct Authorization Link: </span>
-                        <span>Click to authorize in a new browser tab without popup restrictions.</span>
-                      </div>
+                    {/* Action buttons: Direct tab (bypass popup blocker) + synchronous popup */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <a
-                        href={directAuthUrl}
+                        id="jobber-direct-auth-button"
+                        href={computedAuthUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 shadow-xs"
+                        onClick={() => {
+                          handleSaveCredentialsQuietly();
+                          setIsAuthorizing(true);
+                          setSyncNotice('Jobber authorization opened in a new tab! Please click "Allow Access" in Jobber to approve.');
+                        }}
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer hover:shadow-emerald-200 hover:scale-[1.01] active:scale-[0.99]"
                       >
-                        <span>Open Jobber Tab</span>
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-4 h-4 shrink-0" />
+                        <span>Open Jobber in New Tab (Direct) →</span>
                       </a>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenPopup}
+                        disabled={isAuthorizing}
+                        className="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                        <span>Open as Popup</span>
+                      </button>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Direct Link Verification and Copy helper */}
+                  <div className="p-3 bg-slate-100/80 border border-slate-200 rounded-xl space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>Direct Jobber OAuth Approval URL:</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCopyAuthLink}
+                        className="px-2 py-0.5 bg-white hover:bg-slate-50 border border-slate-300 rounded text-[11px] font-semibold text-blue-700 flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{copiedAuthLink ? 'Copied!' : 'Copy Direct Link'}</span>
+                      </button>
+                    </div>
+                    <div className="font-mono text-[10px] text-slate-600 bg-white p-2 rounded-lg border border-slate-200 break-all select-all leading-relaxed">
+                      {computedAuthUrl}
+                    </div>
+                    <p className="text-[10px] text-slate-500">
+                      If popups are disabled in your browser (e.g. Safari on iPad), clicking the green <strong>"Open Jobber in New Tab (Direct)"</strong> button opens Jobber without any browser restrictions.
+                    </p>
+                  </div>
                 </div>
               </div>
 

@@ -1090,8 +1090,13 @@ app.get("/api/jobber/config", (req, res) => {
 // POST update Jobber credentials (Client ID, Client Secret, or direct Access Token)
 app.post("/api/jobber/config", (req, res) => {
   const { accessToken, clientId, clientSecret, accountName } = req.body || {};
-  if (clientId) jobberConfig.clientId = String(clientId).trim();
-  if (clientSecret !== undefined && clientSecret !== null) jobberConfig.clientSecret = String(clientSecret).trim();
+  if (clientId && String(clientId).trim().length > 0) {
+    jobberConfig.clientId = String(clientId).trim();
+  }
+  // Only overwrite clientSecret if a non-empty string is explicitly provided
+  if (clientSecret !== undefined && clientSecret !== null && String(clientSecret).trim().length > 0) {
+    jobberConfig.clientSecret = String(clientSecret).trim();
+  }
   if (accessToken) {
     jobberConfig.accessToken = String(accessToken).trim().replace(/^Bearer\s+/i, "");
     jobberConfig.isConnected = true;
@@ -1121,7 +1126,11 @@ app.post("/api/jobber/config", (req, res) => {
 app.get("/api/jobber/oauth/authorize-url", (req, res) => {
   const baseUrl = getAppBaseUrl(req);
   const redirectUri = (req.query.redirectUri as string) || `${baseUrl}/api/jobber/oauth/callback`;
-  const state = Math.random().toString(36).substring(2, 15);
+  const statePayload = {
+    redirectUri,
+    nonce: Math.random().toString(36).substring(2, 12),
+  };
+  const state = Buffer.from(JSON.stringify(statePayload)).toString("base64url");
 
   if (!jobberConfig.clientId) {
     return res.status(400).json({ error: "Jobber Client ID is required before authorizing" });
@@ -1142,12 +1151,24 @@ app.get("/api/jobber/oauth/authorize-url", (req, res) => {
 });
 
 // GET Jobber OAuth Callback handler
-app.get("/api/jobber/oauth/callback", async (req, res) => {
+app.get(["/api/jobber/oauth/callback", "/api/jobber/oauth/callback/"], async (req, res) => {
   const code = req.query.code as string;
   const error = req.query.error as string;
   const errorDescription = req.query.error_description as string;
-  const baseUrl = getAppBaseUrl(req);
-  const redirectUri = `${baseUrl}/api/jobber/oauth/callback`;
+  const stateParam = req.query.state as string;
+
+  // Use the exact redirect_uri that was encoded into state, or fallback to current host callback
+  let redirectUri = `${getAppBaseUrl(req)}/api/jobber/oauth/callback`;
+  if (stateParam) {
+    try {
+      const decoded = JSON.parse(Buffer.from(stateParam, "base64url").toString("utf-8"));
+      if (decoded?.redirectUri && typeof decoded.redirectUri === "string") {
+        redirectUri = decoded.redirectUri;
+      }
+    } catch {
+      // Fallback to default redirectUri
+    }
+  }
 
   if (error) {
     return res.status(400).send(`
@@ -1224,6 +1245,15 @@ app.get("/api/jobber/oauth/callback", async (req, res) => {
     jobberConfig.lastSyncedAt = new Date().toISOString();
     persistJobberConfigToDisk();
 
+    // Trigger immediate background sync
+    try {
+      syncJobberCalendar(tokenData.access_token, getJobberCreds()).catch((e) => console.warn("Jobber post-auth cal sync note:", e.message));
+      syncJobberQuotes(tokenData.access_token, getJobberCreds()).catch((e) => console.warn("Jobber post-auth quote sync note:", e.message));
+      syncJobberInvoices(tokenData.access_token, getJobberCreds()).catch((e) => console.warn("Jobber post-auth invoice sync note:", e.message));
+    } catch {
+      // Non-blocking
+    }
+
     res.send(`
       <!DOCTYPE html>
       <html>
@@ -1244,10 +1274,15 @@ app.get("/api/jobber/oauth/callback", async (req, res) => {
             <a href="/" class="btn">Return to Dispatch Board</a>
           </div>
           <script>
-            if (window.opener) {
-              window.opener.postMessage({ type: 'JOBBER_CONNECTED' }, '*');
-              setTimeout(() => { window.close(); }, 1500);
-            } else {
+            try {
+              if (window.opener) {
+                window.opener.postMessage({ type: 'JOBBER_CONNECTED' }, '*');
+                window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+                setTimeout(() => { window.close(); }, 1200);
+              } else {
+                setTimeout(() => { window.location.href = '/'; }, 2000);
+              }
+            } catch (e) {
               setTimeout(() => { window.location.href = '/'; }, 2000);
             }
           </script>

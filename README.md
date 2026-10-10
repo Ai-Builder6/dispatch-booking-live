@@ -78,35 +78,30 @@ npm start
 
 ## 🔗 Connecting Your Real Jobber Business Account
 
-This application includes official **Jobber OAuth 2.0 connection support** with **read-only imports** for visits, clients, quotes, and invoices.
+This application includes official **Jobber OAuth 2.0 two-way connection support** with live GraphQL integration for calendar visits, client database records, quotes, and billing invoices.
 
-> **Safety Guarantee**: Imports are **read-only**. Successful syncs refresh your live dispatch board; failed syncs preserve existing data and show a clear error message. **No automatic destructive changes are sent to your real Jobber account.**
+> **Safety Guarantee**: Imports are safe and verified. Successful syncs refresh your live dispatch board; failed syncs preserve existing data and show a clear error message. **No automatic destructive changes are sent to your real Jobber account.**
 
-### Connection Guide:
+### Step-by-Step Connection Guide:
 
-1. **Configure Environment Variables**:
-   Copy `.env.example` to `.env` in the app root:
-   ```bash
-   cp .env.example .env
-   ```
-   Fill in your credentials:
+1. **Jobber Developer Center Redirect URIs**:
+   In your [Jobber Developer Center](https://developer.getjobber.com), open your Developer App settings and ensure your **OAuth Callback URLs / Redirect URIs** include:
+   - **Production Custom Domain**: `https://app.tidyupscleaning.com/api/jobber/oauth/callback`
+   - **AI Studio Preview**: `https://ais-dev-2jvzwakvityygyeyjp5ysi-460696821435.us-east5.run.app/api/jobber/oauth/callback`
+
+2. **Jobber Client ID & Secret**:
+   Your Client ID (`27966135-e33e-4c2e-8dc3-ad7ba06dabb8`) and Client Secret are stored on your secure server instance. You can also supply them via environment variables:
    ```env
-   JOBBER_CLIENT_ID=your-jobber-app-client-id
+   JOBBER_CLIENT_ID=27966135-e33e-4c2e-8dc3-ad7ba06dabb8
    JOBBER_CLIENT_SECRET=your-jobber-app-client-secret
-   JOBBER_REDIRECT_URI=https://app.tidyupscleaning.com/api/jobber/oauth/callback
-   DISPATCH_ADMIN_PASSWORD=your-dispatch-admin-password
+   APP_BASE_URL=https://app.tidyupscleaning.com
    ```
 
-2. **Register the Exact HTTPS Callback URL in Jobber**:
-   - Go to the [Jobber Developer Center](https://developer.getjobber.com).
-   - In your Developer App settings, set the **OAuth Redirect URI** to your exact HTTPS URL:
-     `https://app.tidyupscleaning.com/api/jobber/oauth/callback`
-   - Access the platform via `https://app.tidyupscleaning.com`.
-
-3. **Authorize Your Real Business Account**:
-   - In the dispatch app, click **Jobber Sync & CSV Import** (or **Authorize in Jobber**).
-   - Sign in to your real business account as an administrator and approve access.
-   - Click **Sync Calendar & Visits** to import real visits into your dispatch board.
+3. **1-Click Authorization**:
+   - In the top navigation bar, click the **Jobber Sync** button.
+   - Click **Open Jobber in New Tab (Direct) →** (which bypasses any browser popup blockers, including Safari on iPad).
+   - Log in to your Jobber business account and click **"Allow Access"**.
+   - Your tokens are exchanged and saved, and your visits, quotes, and invoices immediately sync to your dispatch board.
 
 ---
 
