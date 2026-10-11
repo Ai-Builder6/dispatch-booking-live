@@ -1,7 +1,11 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 import App from './App.tsx';
 import './index.css';
+
+// Initialize Vercel Speed Insights
+injectSpeedInsights();
 
 // Early interceptor for Google Maps JavaScript API authentication & target blocked errors, plus quota and referrer limits
 if (typeof window !== 'undefined') {
