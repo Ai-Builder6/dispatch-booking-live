@@ -19,6 +19,7 @@ export interface ScheduledJobItem {
   status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
   jobberWebUri: string;
   notes?: string;
+  callTranscripts?: any[];
   quoteNumber?: string;
   quoteTotal?: number;
   quoteStatus?: 'APPROVED' | 'CONVERTED' | 'AWAITING_RESPONSE' | 'DRAFT';

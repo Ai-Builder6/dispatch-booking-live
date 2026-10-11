@@ -69,8 +69,19 @@ export const TeamChatDrawer: React.FC<TeamChatDrawerProps> = ({
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimeout: any = null;
+    let pollingInterval: any = null;
+    let retryCount = 0;
 
     const connectWs = () => {
+      // Avoid excessive reconnect attempts if WebSockets are not supported or blocked by proxy
+      if (retryCount >= 3) {
+        // Fall back entirely to polling
+        if (!pollingInterval) {
+          pollingInterval = setInterval(loadMessages, 10000);
+        }
+        return;
+      }
+
       const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${proto}//${window.location.host}/ws/chat`;
 
@@ -80,6 +91,11 @@ export const TeamChatDrawer: React.FC<TeamChatDrawerProps> = ({
 
         ws.onopen = () => {
           setIsConnected(true);
+          retryCount = 0;
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+          }
           // Register current user
           ws?.send(
             JSON.stringify({
@@ -100,21 +116,29 @@ export const TeamChatDrawer: React.FC<TeamChatDrawerProps> = ({
               });
             }
           } catch (e) {
-            console.warn('WS message parse error:', e);
+            // Safe parse error ignore
           }
         };
 
         ws.onclose = () => {
           setIsConnected(false);
-          // Auto-reconnect after 3 seconds
-          reconnectTimeout = setTimeout(connectWs, 3000);
+          retryCount++;
+          // Auto-reconnect with backoff, max 3 tries before falling back to REST polling
+          if (retryCount < 3) {
+            reconnectTimeout = setTimeout(connectWs, 5000);
+          } else if (!pollingInterval) {
+            pollingInterval = setInterval(loadMessages, 10000);
+          }
         };
 
-        ws.onerror = (err) => {
-          console.warn('Chat WebSocket notice:', err);
+        ws.onerror = () => {
+          // Handled via onclose and fallback polling
         };
       } catch (err) {
-        console.warn('WS connect error:', err);
+        retryCount++;
+        if (!pollingInterval) {
+          pollingInterval = setInterval(loadMessages, 10000);
+        }
       }
     };
 
@@ -122,7 +146,11 @@ export const TeamChatDrawer: React.FC<TeamChatDrawerProps> = ({
 
     return () => {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      if (ws) ws.close();
+      if (pollingInterval) clearInterval(pollingInterval);
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+      }
     };
   }, [currentUser.id]);
 

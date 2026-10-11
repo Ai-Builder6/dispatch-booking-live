@@ -161,6 +161,8 @@ export interface JobberVisit {
   serviceType: "Standard Cleaning" | "Deep Cleaning" | "Move-Out Cleaning";
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   jobberWebUri: string;
+  callTranscripts?: any[];
+  notes?: string;
 }
 
 export interface JobberClient {

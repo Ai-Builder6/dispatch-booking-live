@@ -2167,6 +2167,9 @@ export function App() {
         <QuoModal
           isOpen={isQuoModalOpen}
           onClose={() => setIsQuoModalOpen(false)}
+          onJobSelected={(_jobId) => {
+            setActiveTopView('SCHEDULED_JOBS');
+          }}
         />
 
         {/* Quick Links & Shortcuts Modal */}

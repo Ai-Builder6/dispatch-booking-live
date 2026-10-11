@@ -56,6 +56,51 @@ export const ClientsDatabaseView: React.FC<ClientsDatabaseViewProps> = ({
   // Per-card quick tag inputs
   const [cardTagInputs, setCardTagInputs] = useState<Record<string, string>>({});
   const [copiedPhoneMap, setCopiedPhoneMap] = useState<Record<string, boolean>>({});
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
+  const [isSyncingJobber, setIsSyncingJobber] = useState(false);
+  const [isImportingQuo, setIsImportingQuo] = useState(false);
+
+  const handleSyncWithJobber = async () => {
+    setIsSyncingJobber(true);
+    setSyncNotice(null);
+    try {
+      const res = await fetch('/api/jobber/sync-contacts', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSyncNotice(`🎉 ${data.message}`);
+        if (data.clients && Array.isArray(data.clients)) {
+          data.clients.forEach((c: ClientRecord) => onUpdateClient(c));
+        }
+      } else {
+        setSyncNotice(data.error || 'Failed to sync contacts with Jobber.');
+      }
+    } catch {
+      setSyncNotice('Network error syncing with Jobber.');
+    } finally {
+      setIsSyncingJobber(false);
+    }
+  };
+
+  const handleImportFromQuo = async () => {
+    setIsImportingQuo(true);
+    setSyncNotice(null);
+    try {
+      const res = await fetch('/api/quo/contacts/import', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSyncNotice(`🎉 ${data.message}`);
+        if (data.clients && Array.isArray(data.clients)) {
+          data.clients.forEach((c: ClientRecord) => onUpdateClient(c));
+        }
+      } else {
+        setSyncNotice(data.error || 'Failed to import Quo contacts.');
+      }
+    } catch {
+      setSyncNotice('Network error importing Quo contacts.');
+    } finally {
+      setIsImportingQuo(false);
+    }
+  };
 
   // Filter clients
   const filteredClients = useMemo(() => {
@@ -170,6 +215,24 @@ export const ClientsDatabaseView: React.FC<ClientsDatabaseViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={handleImportFromQuo}
+            disabled={isImportingQuo}
+            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-98 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isImportingQuo ? 'animate-spin' : ''}`} />
+            <span>{isImportingQuo ? 'Importing...' : 'Import from Quo'}</span>
+          </button>
+
+          <button
+            onClick={handleSyncWithJobber}
+            disabled={isSyncingJobber}
+            className="px-3.5 py-2 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/80 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-98 disabled:opacity-50"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{isSyncingJobber ? 'Syncing...' : 'Sync with Jobber'}</span>
+          </button>
+
           {onOpenQuoModal && (
             <button
               onClick={onOpenQuoModal}
@@ -191,6 +254,16 @@ export const ClientsDatabaseView: React.FC<ClientsDatabaseViewProps> = ({
           </button>
         </div>
       </div>
+
+      {syncNotice && (
+        <div className="p-3.5 bg-violet-950/60 border border-violet-800/80 rounded-xl text-violet-200 text-xs flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{syncNotice}</span>
+          </div>
+          <button onClick={() => setSyncNotice(null)} className="text-violet-400 hover:text-white font-bold cursor-pointer">×</button>
+        </div>
+      )}
 
       {/* ─────────────────────────────────────────────────────────────────────────
           Search & Date Range Filters matching Screenshot 2, 3, 4

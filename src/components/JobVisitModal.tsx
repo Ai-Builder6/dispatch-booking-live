@@ -13,7 +13,12 @@ import {
   ThumbsUp,
   FileText,
   Clock,
-  Sparkles
+  Sparkles,
+  PhoneCall,
+  Volume2,
+  Mic,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { ScheduledJobItem } from '../data/jobberCalendarData';
 
@@ -323,6 +328,76 @@ export const JobVisitModal: React.FC<JobVisitModalProps> = ({
                   <span className="text-slate-300 font-medium">
                     Requested: {job.title || job.serviceType}
                   </span>
+                </div>
+
+                {/* Quo Phone Call Transcripts Section */}
+                <div className="pt-2 border-t border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-violet-400 flex items-center gap-1.5">
+                      <PhoneCall className="w-3.5 h-3.5 text-violet-400" />
+                      <span>Quo Call Transcripts &amp; Audio Notes</span>
+                    </span>
+                    {job.callTranscripts && job.callTranscripts.length > 0 && (
+                      <span className="text-[10px] bg-violet-950 text-violet-300 px-2 py-0.5 rounded-full border border-violet-800 font-bold">
+                        {job.callTranscripts.length} {job.callTranscripts.length === 1 ? 'Call Log' : 'Call Logs'}
+                      </span>
+                    )}
+                  </div>
+
+                  {job.callTranscripts && job.callTranscripts.length > 0 ? (
+                    <div className="space-y-2">
+                      {job.callTranscripts.map((call: any, idx: number) => (
+                        <div key={call.id || idx} className="p-2.5 bg-slate-950/80 rounded-xl border border-violet-900/50 space-y-1.5 text-xs">
+                          <div className="flex items-center justify-between text-[11px] text-slate-400">
+                            <span className="font-semibold text-slate-200 flex items-center gap-1">
+                              <Volume2 className="w-3 h-3 text-violet-400" />
+                              <span>{call.lineName || 'Primary Dispatch'} ({call.callerPhone})</span>
+                            </span>
+                            <span className="text-[10px] font-mono">
+                              {call.duration ? `${Math.floor(call.duration / 60)}m ${call.duration % 60}s` : 'Call log'}
+                            </span>
+                          </div>
+
+                          {call.summary && (
+                            <p className="text-slate-300 text-[11px] font-medium leading-relaxed bg-violet-950/30 p-2 rounded-lg border border-violet-900/30">
+                              <strong className="text-violet-300">AI Summary: </strong>
+                              {call.summary}
+                            </p>
+                          )}
+
+                          {call.transcriptText && (
+                            <details className="text-[11px] text-slate-400 cursor-pointer">
+                              <summary className="hover:text-slate-200 transition-colors font-semibold">
+                                View Full Voice Transcript
+                              </summary>
+                              <div className="mt-1 p-2 bg-slate-900 rounded border border-slate-800 text-[11px] text-slate-300 whitespace-pre-wrap leading-relaxed max-h-36 overflow-y-auto">
+                                {call.transcriptText}
+                              </div>
+                            </details>
+                          )}
+
+                          {call.recordingUrl && (
+                            <div className="pt-1 flex items-center gap-2">
+                              <a
+                                href={call.recordingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1"
+                              >
+                                <span>▶ Listen to Call Audio</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-2.5 bg-slate-950/50 rounded-xl border border-slate-800/60 text-[11px] text-slate-400 flex items-center justify-between">
+                      <span>No phone calls attached yet.</span>
+                      <span className="text-[10px] text-violet-400 font-medium">Auto-syncs via Quo Webhook</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

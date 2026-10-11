@@ -6,6 +6,10 @@
       "destination": "/api/jobber/oauth/callback"
     },
     {
+      "source": "/api/quo/webhook/",
+      "destination": "/api/quo/webhook"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

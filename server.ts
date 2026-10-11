@@ -932,7 +932,10 @@ Extract and structure the voice transcript into a JSON Cleaning Service booking 
 });
 
 function getAppBaseUrl(req: express.Request): string {
-  if (process.env.APP_BASE_URL) return process.env.APP_BASE_URL.replace(/\/$/, "");
+  const envUrl = (process.env.APP_BASE_URL || "").trim();
+  if (envUrl && (envUrl.startsWith("http://") || envUrl.startsWith("https://"))) {
+    return envUrl.replace(/\/$/, "");
+  }
   // Jobber strictly requires HTTPS for OAuth redirect URIs
   const forwardedHost = (req.headers["x-forwarded-host"] as string) || req.get("host") || "";
   if (forwardedHost.includes("tidyupscleaning.com")) {
@@ -2658,13 +2661,659 @@ app.post("/api/quo/config", async (req, res) => {
   });
 });
 
+// Helper to normalize phone numbers for robust matching (e.g., +17809386742 -> 7809386742)
+function normalizePhoneDigits(phone: any): string {
+  if (!phone) return "";
+  const digits = String(phone).replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return digits.slice(1);
+  }
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+function formatPhoneDisplay(phone: string): string {
+  const digits = normalizePhoneDigits(phone);
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return phone;
+}
+
+function detectServiceTypeFromText(text: string): "Standard Cleaning" | "Deep Cleaning" | "Move-Out Cleaning" {
+  const lower = (text || "").toLowerCase();
+  if (lower.includes("move-out") || lower.includes("move out") || lower.includes("move in") || lower.includes("turnover") || lower.includes("tenancy") || lower.includes("possession")) {
+    return "Move-Out Cleaning";
+  }
+  if (lower.includes("deep") || lower.includes("oven") || lower.includes("fridge") || lower.includes("baseboard") || lower.includes("spring clean") || lower.includes("post-construction")) {
+    return "Deep Cleaning";
+  }
+  return "Standard Cleaning";
+}
+
+// Comprehensive Inbound Quo (OpenPhone) Webhook Processor
+async function processQuoCallEvent(event: any) {
+  const store = loadStore() || {
+    version: 1,
+    lastSavedAt: new Date().toISOString(),
+    tickets: INITIAL_TICKETS,
+    cleanerOverrides: {},
+    scheduledVisits: [],
+    unscheduledJobs: [],
+    quotes: [],
+    invoices: [],
+    clients: [],
+    quoCallLogs: [],
+  };
+
+  if (!store.quoCallLogs) store.quoCallLogs = [];
+  if (!store.clients) store.clients = [];
+  if (!store.unscheduledJobs) store.unscheduledJobs = [];
+  if (!store.scheduledVisits) store.scheduledVisits = [];
+
+  const eventType = event.type || event.event || "call.completed";
+  const dataObj = event.data?.object || event.call || event.data || event;
+
+  const callId = dataObj.id || dataObj.callId || `call_${Date.now()}`;
+  const direction = dataObj.direction || "inbound";
+  const rawFrom = dataObj.from || dataObj.participants?.[0]?.phoneNumber || "";
+  const rawTo = dataObj.to || "";
+  const duration = Number(dataObj.duration || dataObj.durationSeconds || 0);
+  const phoneNumberId = dataObj.phoneNumberId || "";
+
+  // Line identification
+  const matchedLine = quoConfig.phoneNumbers.find((pn: any) => pn.id === phoneNumberId || pn.number === rawTo || pn.number === rawFrom);
+  const lineName = matchedLine ? matchedLine.name : "Primary Dispatch";
+
+  // Identify caller phone (inbound is 'from', outbound is 'to')
+  const callerRaw = direction === "inbound" ? rawFrom : rawTo;
+  const callerDigits = normalizePhoneDigits(callerRaw);
+  const cleanCallerPhone = formatPhoneDisplay(callerRaw || "Unknown");
+
+  // Extract transcript and summary
+  const transcriptText = (
+    dataObj.transcript?.text ||
+    dataObj.transcript ||
+    dataObj.text ||
+    (Array.isArray(dataObj.dialogue) ? dataObj.dialogue.map((d: any) => `${d.speaker || 'Caller'}: ${d.text}`).join('\n') : '') ||
+    ""
+  ).trim();
+
+  const summary = (
+    dataObj.summary?.text ||
+    dataObj.summary ||
+    (transcriptText ? transcriptText.slice(0, 180) + (transcriptText.length > 180 ? '...' : '') : 'Inbound voice call completed')
+  ).trim();
+
+  const mediaRecording = dataObj.media?.find((m: any) => m.type === "recording")?.url || dataObj.recordingUrl || "";
+  const callerNameFromPayload = dataObj.callerName || dataObj.participants?.[0]?.name || "";
+  const timestamp = dataObj.createdAt || dataObj.completedAt || new Date().toISOString();
+
+  // 1. MATCH TO AN EXISTING JOB IN SCHEDULED VISITS
+  let matchedJob: any = null;
+  if (callerDigits) {
+    // Exact phone digits match
+    matchedJob = store.scheduledVisits.find((v: any) => {
+      const vDigits = normalizePhoneDigits(v.clientPhone || v.secondaryPhone);
+      return vDigits && (vDigits === callerDigits || vDigits.endsWith(callerDigits) || callerDigits.endsWith(vDigits));
+    });
+
+    // Fallback: match by caller name if provided
+    if (!matchedJob && callerNameFromPayload) {
+      const lowerName = callerNameFromPayload.toLowerCase().trim();
+      matchedJob = store.scheduledVisits.find((v: any) => (v.clientName || "").toLowerCase().includes(lowerName));
+    }
+  }
+
+  const effectiveCallerName = callerNameFromPayload || (matchedJob ? matchedJob.clientName : cleanCallerPhone);
+
+  const callLogEntry: any = {
+    id: callId,
+    callId,
+    direction,
+    callerPhone: cleanCallerPhone,
+    callerName: effectiveCallerName,
+    duration,
+    recordingUrl: mediaRecording,
+    transcriptText,
+    summary,
+    lineName,
+    timestamp,
+    matchedJobId: matchedJob ? matchedJob.id : null,
+    matchedJobTitle: matchedJob ? matchedJob.title : null,
+    status: matchedJob ? "MATCHED_TO_JOB" : "NEW_LEAD",
+  };
+
+  if (matchedJob) {
+    // Attach transcript to the existing job
+    if (!matchedJob.callTranscripts) matchedJob.callTranscripts = [];
+    const existingIdx = matchedJob.callTranscripts.findIndex((c: any) => c.callId === callId || c.id === callId);
+    if (existingIdx >= 0) {
+      matchedJob.callTranscripts[existingIdx] = { ...matchedJob.callTranscripts[existingIdx], ...callLogEntry };
+    } else {
+      matchedJob.callTranscripts.unshift(callLogEntry);
+    }
+
+    // Append call note to job notes
+    const auditNote = `[Quo Call Log - ${lineName}]: ${summary}`;
+    if (!matchedJob.notes?.includes(summary.slice(0, 40))) {
+      matchedJob.notes = matchedJob.notes ? `${matchedJob.notes}\n${auditNote}` : auditNote;
+    }
+  } else {
+    // Check quotes or unscheduled queue
+    let matchedQuote = store.quotes?.find((q: any) => normalizePhoneDigits(q.clientPhone) === callerDigits);
+    if (matchedQuote) {
+      if (!matchedQuote.callTranscripts) matchedQuote.callTranscripts = [];
+      matchedQuote.callTranscripts.unshift(callLogEntry);
+      callLogEntry.matchedJobTitle = `Quote ${matchedQuote.quoteNumber} (${matchedQuote.clientName})`;
+      callLogEntry.status = "MATCHED_TO_QUOTE";
+    } else {
+      // Create new Lead Ticket in Unscheduled Jobs so the lead is never lost
+      const newLeadTicket = {
+        id: `lead-quo-${Date.now()}`,
+        ticketNumber: `LEAD-${Math.floor(1000 + Math.random() * 9000)}`,
+        title: `Inbound Call: ${effectiveCallerName}`,
+        clientName: effectiveCallerName,
+        clientPhone: cleanCallerPhone,
+        serviceType: detectServiceTypeFromText(`${summary} ${transcriptText}`),
+        serviceAddress: "Edmonton, Alberta",
+        status: "UNSCHEDULED",
+        notes: `[Inbound Phone Lead on ${lineName}]: ${summary}\nFull Transcript: ${transcriptText}`,
+        createdAt: timestamp,
+        callTranscripts: [callLogEntry],
+        source: `Quo Call Intake (${lineName})`,
+      };
+      store.unscheduledJobs.unshift(newLeadTicket);
+      callLogEntry.matchedJobId = newLeadTicket.id;
+      callLogEntry.matchedJobTitle = newLeadTicket.title;
+      callLogEntry.status = "AUTO_CREATED_LEAD";
+    }
+  }
+
+  // 2. SAVE OR UPDATE CONTACT IN CLIENTS DATABASE
+  let existingClient = store.clients.find((c: any) => {
+    const cDigits = normalizePhoneDigits(c.phone || c.secondaryPhone);
+    return cDigits && (cDigits === callerDigits || cDigits.endsWith(callerDigits) || callerDigits.endsWith(cDigits));
+  });
+
+  if (existingClient) {
+    if (effectiveCallerName && (!existingClient.name || existingClient.name.startsWith("+1") || existingClient.name.includes("Call ["))) {
+      existingClient.name = effectiveCallerName;
+    }
+    existingClient.latestServiceDate = timestamp.slice(0, 10);
+    existingClient.totalJobs = (existingClient.totalJobs || 0) + 1;
+    if (!existingClient.callHistory) existingClient.callHistory = [];
+    existingClient.callHistory.unshift(callLogEntry);
+    existingClient.updatedAt = timestamp;
+  } else {
+    const newClientRecord = {
+      id: `cli-quo-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: effectiveCallerName,
+      phone: cleanCallerPhone,
+      email: "",
+      address: matchedJob?.serviceAddress || "Edmonton, Alberta",
+      city: "Edmonton",
+      province: "AB",
+      postalCode: "T5J 0A1",
+      verdict: "Good lead",
+      tags: ["quo-lead", "phone-inbound", "needs-jobber-sync"],
+      isJobberLinked: Boolean(matchedJob),
+      jobberId: matchedJob ? `jobber-${matchedJob.id}` : undefined,
+      totalJobs: matchedJob ? 1 : 0,
+      latestServiceDate: timestamp.slice(0, 10),
+      notes: `Inbound lead on ${lineName}. Last transcript: ${summary}`,
+      source: "Quo",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      callHistory: [callLogEntry],
+    };
+    store.clients.unshift(newClientRecord);
+  }
+
+  // 3. STORE IN GLOBAL QUO CALL LOGS (Keep last 200 calls)
+  store.quoCallLogs.unshift(callLogEntry);
+  if (store.quoCallLogs.length > 200) {
+    store.quoCallLogs = store.quoCallLogs.slice(0, 200);
+  }
+
+  // Increment line stats
+  if (matchedLine) {
+    matchedLine.totalCallsToday = (matchedLine.totalCallsToday || 0) + 1;
+  }
+
+  saveStore(store);
+  return { success: true, callLog: callLogEntry, matchedJob: matchedJob ? { id: matchedJob.id, title: matchedJob.title } : null };
+}
+
 // Inbound webhook from Quo for completed calls & transcripts
 app.post("/api/quo/webhook", async (req, res) => {
   const event = req.body || {};
   console.log("Inbound Quo Webhook Event:", event.type || event.event || "call.completed");
-  
-  // Acknowledge Quo instantly
-  res.status(200).json({ received: true });
+
+  try {
+    const result = await processQuoCallEvent(event);
+    res.status(200).json({ received: true, ...result });
+  } catch (err: any) {
+    console.error("Error processing Quo webhook event:", err);
+    res.status(200).json({ received: true, error: err.message });
+  }
+});
+
+// GET all Quo call logs with synced transcripts
+app.get("/api/quo/calls", (_req, res) => {
+  const store = loadStore();
+  const calls = store?.quoCallLogs || [];
+  res.json({
+    success: true,
+    count: calls.length,
+    calls,
+  });
+});
+
+// POST manually link or re-assign a call transcript to a specific job
+app.post("/api/quo/calls/link", (req, res) => {
+  const { callId, jobId } = req.body || {};
+  if (!callId || !jobId) {
+    return res.status(400).json({ error: "callId and jobId are required" });
+  }
+
+  const store = loadStore();
+  if (!store) return res.status(500).json({ error: "Store not loaded" });
+
+  const call = (store.quoCallLogs || []).find((c: any) => c.id === callId || c.callId === callId);
+  const job = (store.scheduledVisits || []).find((v: any) => v.id === jobId) ||
+              (store.unscheduledJobs || []).find((v: any) => v.id === jobId);
+
+  if (!call) return res.status(404).json({ error: "Call log not found" });
+  if (!job) return res.status(404).json({ error: "Job visit not found" });
+
+  call.matchedJobId = job.id;
+  call.matchedJobTitle = job.title;
+  call.status = "MATCHED_TO_JOB";
+
+  if (!job.callTranscripts) job.callTranscripts = [];
+  const idx = job.callTranscripts.findIndex((c: any) => c.id === callId || c.callId === callId);
+  if (idx >= 0) {
+    job.callTranscripts[idx] = call;
+  } else {
+    job.callTranscripts.unshift(call);
+  }
+
+  const noteAddition = `[Quo Linked Call]: ${call.summary || call.transcriptText}`;
+  if (!job.notes?.includes(call.summary?.slice(0, 30))) {
+    job.notes = job.notes ? `${job.notes}\n${noteAddition}` : noteAddition;
+  }
+
+  saveStore(store);
+  res.json({ success: true, message: `Call transcript successfully linked to ${job.title}!`, call, job });
+});
+
+// POST simulate an incoming Quo phone call with transcript for live testing
+app.post("/api/quo/simulate-call", async (req, res) => {
+  const { callerPhone, callerName, transcriptText, summary, lineName } = req.body || {};
+
+  const simulatedEvent = {
+    id: `sim_evt_${Date.now()}`,
+    type: "call.transcript.completed",
+    data: {
+      object: {
+        id: `sim_call_${Date.now()}`,
+        direction: "inbound",
+        from: callerPhone || "+1 (780) 938-6742", // Default Kati Luknowsky (matches VISIT-91202)
+        to: "+1 (587) 570-8005",
+        duration: 142,
+        callerName: callerName || "Kati Luknowsky",
+        media: [{ type: "recording", url: "https://files.getjobber.com/audio/sample_call.mp3" }],
+        transcript: {
+          text: transcriptText || "Hi, this is Kati Luknowsky calling to check in on our 2 Bed 3 Bath Deep Cleaning scheduled for this Friday at 4 PM. We also wanted to ask if the team can pay special attention to the baseboards in the master bedroom and the oven.",
+        },
+        summary: summary || "Kati Luknowsky confirmed Friday 2Bed 3Bath Deep Cleaning visit. Requested focus on baseboards and oven.",
+        phoneNumberId: "PNahmHFAAr",
+        createdAt: new Date().toISOString(),
+      },
+    },
+  };
+
+  try {
+    const result = await processQuoCallEvent(simulatedEvent);
+    res.json({
+      success: true,
+      message: "Simulated Quo call and transcript processed successfully!",
+      event: simulatedEvent,
+      ...result,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET fetch live contacts from Quo API
+app.get("/api/quo/contacts", async (_req, res) => {
+  const apiKey = quoConfig.apiKey || process.env.QUO_API_KEY;
+  if (!apiKey) {
+    return res.status(400).json({ error: "No Quo API key configured." });
+  }
+
+  try {
+    const quoRes = await fetch("https://api.openphone.com/v1/contacts?maxResults=50", {
+      headers: { Authorization: apiKey },
+    });
+    const data = await quoRes.json();
+    if (!quoRes.ok) {
+      return res.status(quoRes.status).json({ error: data.message || "Failed to fetch Quo contacts" });
+    }
+
+    const contacts = (data.data || []).map((c: any) => {
+      const fn = (c.defaultFields?.firstName || "").trim();
+      const ln = (c.defaultFields?.lastName || "").trim();
+      const fullName = (fn + " " + ln).trim() || c.defaultFields?.phoneNumbers?.[0]?.value || "Unknown Contact";
+      const primaryPhone = c.defaultFields?.phoneNumbers?.[0]?.value || "";
+      const email = c.defaultFields?.emails?.[0]?.value || "";
+      return {
+        id: c.id,
+        name: fullName,
+        firstName: fn,
+        lastName: ln,
+        phone: primaryPhone,
+        email,
+        createdAt: c.createdAt,
+      };
+    });
+
+    res.json({ success: true, count: contacts.length, contacts });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST import/merge all Quo contacts into local persistent clients store
+app.post("/api/quo/contacts/import", async (_req, res) => {
+  const apiKey = quoConfig.apiKey || process.env.QUO_API_KEY;
+  if (!apiKey) {
+    return res.status(400).json({ error: "No Quo API key configured." });
+  }
+
+  try {
+    const quoRes = await fetch("https://api.openphone.com/v1/contacts?maxResults=50", {
+      headers: { Authorization: apiKey },
+    });
+    const data = await quoRes.json();
+    if (!quoRes.ok) {
+      return res.status(quoRes.status).json({ error: data.message || "Failed to fetch Quo contacts" });
+    }
+
+    const store = loadStore() || {
+      version: 1,
+      lastSavedAt: new Date().toISOString(),
+      tickets: INITIAL_TICKETS,
+      cleanerOverrides: {},
+      scheduledVisits: [],
+      unscheduledJobs: [],
+      quotes: [],
+      invoices: [],
+      clients: [],
+    };
+    if (!store.clients) store.clients = [];
+
+    let importedCount = 0;
+    let updatedCount = 0;
+
+    (data.data || []).forEach((qc: any) => {
+      const fn = (qc.defaultFields?.firstName || "").trim();
+      const ln = (qc.defaultFields?.lastName || "").trim();
+      const fullName = (fn + " " + ln).trim() || qc.defaultFields?.phoneNumbers?.[0]?.value || "Contact";
+      const primaryPhone = qc.defaultFields?.phoneNumbers?.[0]?.value || "";
+      const email = qc.defaultFields?.emails?.[0]?.value || "";
+      const digits = normalizePhoneDigits(primaryPhone);
+
+      if (!digits) return;
+
+      const existing = store.clients.find((c: any) => {
+        const cDigits = normalizePhoneDigits(c.phone || c.secondaryPhone);
+        return cDigits && (cDigits === digits || cDigits.endsWith(digits) || digits.endsWith(cDigits));
+      });
+
+      if (existing) {
+        existing.quoContactId = qc.id;
+        if (fullName && (!existing.name || existing.name.startsWith("+1") || existing.name.includes("Call ["))) {
+          existing.name = fullName;
+          updatedCount++;
+        }
+        if (email && !existing.email) existing.email = email;
+        existing.tags = Array.from(new Set([...(existing.tags || []), "quo-contact"]));
+      } else {
+        store.clients.push({
+          id: `cli-quo-${qc.id}`,
+          quoContactId: qc.id,
+          name: fullName,
+          phone: primaryPhone,
+          email,
+          address: "Edmonton, Alberta",
+          city: "Edmonton",
+          province: "AB",
+          postalCode: "T5J 0A1",
+          verdict: "Good lead",
+          tags: ["quo-contact", "phone-lead", "needs-jobber-sync"],
+          isJobberLinked: false,
+          totalJobs: 0,
+          latestServiceDate: new Date().toISOString().slice(0, 10),
+          notes: "Imported from Quo phone directory.",
+          source: "Quo",
+          createdAt: qc.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        importedCount++;
+      }
+    });
+
+    saveStore(store);
+    res.json({
+      success: true,
+      message: `Quo directory synced! ${importedCount} new contacts added, ${updatedCount} existing contacts updated.`,
+      importedCount,
+      updatedCount,
+      totalClients: store.clients.length,
+      clients: store.clients,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST save / update contact name, details, and propagate across all jobs and Quo
+app.post("/api/clients/update", async (req, res) => {
+  const { id, name, phone, email, address, notes, tags, verdict } = req.body || {};
+  if (!id && !phone) {
+    return res.status(400).json({ error: "Client ID or phone is required." });
+  }
+
+  const store = loadStore();
+  if (!store) return res.status(500).json({ error: "Store not loaded" });
+  if (!store.clients) store.clients = [];
+
+  const targetDigits = normalizePhoneDigits(phone);
+  let client = store.clients.find((c: any) => c.id === id || (targetDigits && normalizePhoneDigits(c.phone) === targetDigits));
+
+  if (!client) {
+    // Create new client if not existing
+    client = {
+      id: id || `cli-${Date.now()}`,
+      name: name || "New Client",
+      phone: phone || "",
+      email: email || "",
+      address: address || "Edmonton, Alberta",
+      city: "Edmonton",
+      province: "AB",
+      verdict: verdict || "Client",
+      tags: tags || ["manual"],
+      isJobberLinked: false,
+      totalJobs: 0,
+      createdAt: new Date().toISOString(),
+    };
+    store.clients.unshift(client);
+  }
+
+  if (name) client.name = name;
+  if (phone) client.phone = phone;
+  if (email !== undefined) client.email = email;
+  if (address !== undefined) client.address = address;
+  if (notes !== undefined) client.notes = notes;
+  if (tags) client.tags = tags;
+  if (verdict) client.verdict = verdict;
+  client.updatedAt = new Date().toISOString();
+
+  // Propagate name across matching scheduled visits so the calendar and dispatch board reflect it instantly
+  let updatedVisitsCount = 0;
+  if (client.phone && name) {
+    const cDigits = normalizePhoneDigits(client.phone);
+    (store.scheduledVisits || []).forEach((v: any) => {
+      const vDigits = normalizePhoneDigits(v.clientPhone || v.secondaryPhone);
+      if (vDigits && (vDigits === cDigits || vDigits.endsWith(cDigits) || cDigits.endsWith(vDigits))) {
+        v.clientName = name;
+        updatedVisitsCount++;
+      }
+    });
+
+    (store.quotes || []).forEach((q: any) => {
+      if (normalizePhoneDigits(q.clientPhone) === cDigits) {
+        q.clientName = name;
+      }
+    });
+
+    (store.invoices || []).forEach((i: any) => {
+      if (normalizePhoneDigits(i.clientPhone) === cDigits) {
+        i.clientName = name;
+      }
+    });
+  }
+
+  // If connected to Quo and client has a quoContactId, update contact name in Quo API
+  if (client.quoContactId && (quoConfig.apiKey || process.env.QUO_API_KEY)) {
+    try {
+      const [firstName, ...lastParts] = (name || "").split(" ");
+      const lastName = lastParts.join(" ");
+      fetch(`https://api.openphone.com/v1/contacts/${client.quoContactId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: quoConfig.apiKey || process.env.QUO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          defaultFields: {
+            firstName: firstName || name,
+            lastName: lastName || "",
+          },
+        }),
+      }).catch((e) => console.warn("Quo contact patch notice:", e.message));
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  saveStore(store);
+  res.json({
+    success: true,
+    message: `Contact "${client.name}" saved! Propagated to ${updatedVisitsCount} scheduled visits.`,
+    client,
+    updatedVisitsCount,
+  });
+});
+
+// POST sync all contacts between local database and Jobber
+app.post("/api/jobber/sync-contacts", async (_req, res) => {
+  const store = loadStore();
+  if (!store) return res.status(500).json({ error: "Store not loaded" });
+  if (!store.clients) store.clients = [];
+
+  const token = (jobberConfig.accessToken || "").trim();
+  let jobberSyncedCount = 0;
+
+  // If Jobber has active token, attempt to pull latest clients from Jobber
+  if (token && !token.startsWith("jobber_oauth")) {
+    try {
+      const clientData = await syncJobberClients(token, getJobberCreds());
+      if (clientData.clients && clientData.clients.length > 0) {
+        clientData.clients.forEach((jc: any) => {
+          const jDigits = normalizePhoneDigits(jc.phone);
+          const existing = store.clients.find((c: any) => {
+            const cDigits = normalizePhoneDigits(c.phone);
+            return cDigits && (cDigits === jDigits || cDigits.endsWith(jDigits) || jDigits.endsWith(cDigits));
+          });
+
+          if (existing) {
+            existing.isJobberLinked = true;
+            existing.jobberId = jc.id;
+            if (jc.name && (!existing.name || existing.name.startsWith("+1"))) {
+              existing.name = jc.name;
+            }
+          } else {
+            store.clients.push({
+              id: `cli-jobber-${jc.id}`,
+              name: jc.name,
+              phone: jc.phone,
+              email: jc.email || "",
+              address: jc.address || "Edmonton, Alberta",
+              city: jc.city || "Edmonton",
+              province: jc.province || "AB",
+              postalCode: jc.postalCode || "T5J 0A1",
+              verdict: "Client",
+              tags: ["jobber-synced"],
+              isJobberLinked: true,
+              jobberId: jc.id,
+              totalJobs: jc.totalJobs || 1,
+              latestServiceDate: new Date().toISOString().slice(0, 10),
+              source: "Jobber",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+            jobberSyncedCount++;
+          }
+        });
+      }
+    } catch (err: any) {
+      console.warn("Jobber contact sync note:", err.message);
+    }
+  }
+
+  // Also harvest any client names and numbers from scheduled visits
+  (store.scheduledVisits || []).forEach((v: any) => {
+    const vDigits = normalizePhoneDigits(v.clientPhone);
+    if (!vDigits) return;
+    const existing = store.clients.find((c: any) => normalizePhoneDigits(c.phone) === vDigits);
+    if (existing) {
+      existing.isJobberLinked = true;
+      if (v.clientName && (!existing.name || existing.name.startsWith("+1"))) {
+        existing.name = v.clientName;
+      }
+    } else {
+      store.clients.push({
+        id: `cli-visit-${v.id}`,
+        name: v.clientName,
+        phone: v.clientPhone,
+        address: v.serviceAddress,
+        city: "Edmonton",
+        province: "AB",
+        postalCode: "T5J 0A1",
+        verdict: "Client",
+        tags: ["jobber-visit"],
+        isJobberLinked: true,
+        totalJobs: 1,
+        latestServiceDate: (v.startAt || "").slice(0, 10),
+        notes: `Customer for visit ${v.visitNumber || v.title}`,
+        source: "Jobber",
+        createdAt: new Date().toISOString(),
+      });
+      jobberSyncedCount++;
+    }
+  });
+
+  saveStore(store);
+  res.json({
+    success: true,
+    message: `All contacts synchronized! ${store.clients.length} contacts saved and aligned with Jobber.`,
+    totalContacts: store.clients.length,
+    jobberLinkedCount: store.clients.filter((c: any) => c.isJobberLinked).length,
+    clients: store.clients,
+  });
 });
 
 // In-memory cache for printable manifests to ensure zero URL bloat
@@ -3453,7 +4102,7 @@ async function startServer() {
   if (process.env.NODE_ENV !== "production" || !hasDist) {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: "spa",
     });
     app.use(vite.middlewares);

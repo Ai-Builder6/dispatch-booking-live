@@ -17,6 +17,7 @@ export interface AppPersistentStore {
   clients?: any[];
   quotes: any[];
   invoices: any[];
+  quoCallLogs?: any[];
   chatMessages?: any[];
   jobberConfig?: {
     isConnected: boolean;
