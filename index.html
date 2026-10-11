@@ -2,6 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Suppress Vite HMR WebSocket notices in proxied iframe environments
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event && event.reason && String(event.reason.message || event.reason).includes('WebSocket closed without opened')) {
+          event.preventDefault();
+        }
+      });
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#ec4899" />
     <meta name="mobile-web-app-capable" content="yes" />
